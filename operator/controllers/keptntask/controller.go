@@ -104,7 +104,7 @@ func (r *KeptnTaskReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			span.SetStatus(codes.Error, err.Error())
 			return ctrl.Result{Requeue: true}, err
 		}
-		return ctrl.Result{Requeue: true, RequeueAfter: 10 * time.Second}, nil
+		return ctrl.Result{}, nil
 	}
 
 	if !task.Status.Status.IsCompleted() {
@@ -113,7 +113,7 @@ func (r *KeptnTaskReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 			span.SetStatus(codes.Error, err.Error())
 			return ctrl.Result{Requeue: true, RequeueAfter: 10 * time.Second}, err
 		}
-		return ctrl.Result{Requeue: true, RequeueAfter: 10 * time.Second}, nil
+		return ctrl.Result{}, nil
 	}
 
 	r.Log.Info("Finished Reconciling KeptnTask")
