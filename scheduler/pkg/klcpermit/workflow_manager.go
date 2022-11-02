@@ -14,8 +14,6 @@ import (
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/klog/v2"
 	"k8s.io/kubernetes/pkg/scheduler/framework"
-	"os"
-	"os/signal"
 	"strings"
 
 	"go.opentelemetry.io/otel"
@@ -133,17 +131,11 @@ func (sMgr *WorkloadManager) ObserveWorkloadForPod(ctx context.Context, handler 
 
 	informer := factory.ForResource(*gvr)
 
-	stopCh := make(chan struct{})
-
-	go sMgr.startWatching(ctx, stopCh, informer.Informer(), pod, handler)
-	sigCh := make(chan os.Signal, 0)
-	signal.Notify(sigCh, os.Kill, os.Interrupt)
-	<-sigCh
-	close(stopCh)
-
+	sMgr.startWatching(ctx, informer.Informer(), pod, handler)
 }
 
-func (sMgr *WorkloadManager) startWatching(ctx context.Context, stopCh <-chan struct{}, s cache.SharedIndexInformer, pod *corev1.Pod, handler framework.WaitingPod) {
+func (sMgr *WorkloadManager) startWatching(ctx context.Context, s cache.SharedIndexInformer, pod *corev1.Pod, handler framework.WaitingPod) {
+	stopCh := make(chan struct{})
 	workloadInstanceName := getCRDName(pod)
 
 	checkWorkloadInstance := func(obj interface{}) {
@@ -164,10 +156,12 @@ func (sMgr *WorkloadManager) startWatching(ctx context.Context, stopCh <-chan st
 				span.End()
 				handler.Reject(PluginName, "Pre Deployment Check failed")
 				unbindSpan(pod)
+				stopCh <- struct{}{}
 			case StateSucceeded:
 				handler.Allow(PluginName)
 				span.End()
 				unbindSpan(pod)
+				stopCh <- struct{}{}
 			case StatePending:
 			case StateRunning:
 			case StateUnknown:
