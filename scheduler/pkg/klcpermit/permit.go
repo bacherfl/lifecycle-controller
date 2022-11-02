@@ -59,6 +59,7 @@ func (pl *Permit) Permit(ctx context.Context, state *framework.CycleState, p *v1
 func (pl *Permit) monitorPod(ctx context.Context, p *v1.Pod) {
 	waitingPodHandler := pl.handler.GetWaitingPod(p.UID)
 
+	pl.workloadManager.ObserveWorkloadForPod(ctx, waitingPodHandler, p)
 	for {
 		switch pl.workloadManager.Permit(ctx, p) {
 		case Failure:
