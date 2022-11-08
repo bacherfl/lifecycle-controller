@@ -9,6 +9,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"k8s.io/client-go/tools/cache"
@@ -125,7 +126,9 @@ func (sMgr *WorkloadManager) getSpan(ctx context.Context, crd *unstructured.Unst
 }
 
 func (sMgr *WorkloadManager) ObserveWorkloadForPod(ctx context.Context, handler framework.WaitingPod, pod *corev1.Pod) {
-	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(sMgr.dynamicClient, 0, pod.GetNamespace(), nil)
+	factory := dynamicinformer.NewFilteredDynamicSharedInformerFactory(sMgr.dynamicClient, 0, pod.GetNamespace(), func(options *metav1.ListOptions) {
+		options.FieldSelector = fields.OneTermEqualSelector("metadata.name", getCRDName(pod)).String()
+	})
 
 	gvr, _ := schema.ParseResourceArg("keptnworkloadinstances.v1alpha1.lifecycle.keptn.sh")
 
@@ -148,7 +151,9 @@ func (sMgr *WorkloadManager) startWatching(ctx context.Context, s cache.SharedIn
 		_, span := sMgr.getSpan(ctx, unstructuredWI, pod)
 
 		phase, found, err := unstructured.NestedString(unstructuredWI.UnstructuredContent(), "status", "preDeploymentEvaluationStatus")
-		klog.Infof("[Keptn Permit Plugin] workloadInstance crd %s, found %s with phase %s ", unstructuredWI, found, phase)
+
+		klog.Infof("[Keptn Permit Plugin] workloadInstance crd %s updated, preDeploymentEvaluationStatus=%s", workloadInstanceName, phase)
+
 		if err == nil && found {
 			span.AddEvent("StatusEvaluation", trace.WithAttributes(tracing.Status.String(phase)))
 			switch KeptnState(phase) {
@@ -176,7 +181,6 @@ func (sMgr *WorkloadManager) startWatching(ctx context.Context, s cache.SharedIn
 			checkWorkloadInstance(obj)
 		},
 		DeleteFunc: func(obj interface{}) {
-			logrus.Info("received update event!")
 		},
 	}
 	s.AddEventHandler(handlers)
