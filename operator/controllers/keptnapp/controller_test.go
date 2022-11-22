@@ -2,6 +2,9 @@ package keptnapp
 
 import (
 	"context"
+	"reflect"
+	"testing"
+
 	lfcv1alpha1 "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1"
 	keptncommon "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
 	utils "github.com/keptn/lifecycle-toolkit/operator/controllers/common"
@@ -12,10 +15,8 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/record"
-	"reflect"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
-	"testing"
 )
 
 // Example Unit test on help function
@@ -115,7 +116,7 @@ func TestKeptnAppReconciler_reconcile(t *testing.T) {
 	// case 1 reconcile and create app ver
 	assert.Equal(t, tracer.StartCalls()[0].SpanName, "reconcile_app")
 	assert.Equal(t, tracer.StartCalls()[1].SpanName, "create_app_version")
-	assert.Equal(t, tracer.StartCalls()[2].SpanName, "appversion_deployment")
+	assert.Equal(t, tracer.StartCalls()[2].SpanName, "myapp-1.0.0")
 	//case 2 creates no span because notfound
 	//case 3 reconcile finished crd
 	assert.Equal(t, tracer.StartCalls()[3].SpanName, "reconcile_app")

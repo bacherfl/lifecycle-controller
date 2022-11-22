@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+
 	lfcv1alpha1 "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1"
 	keptncommon "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
 	"go.opentelemetry.io/otel/metric/instrument"
@@ -42,6 +43,9 @@ func AddAppVersion(c client.Client, namespace string, appName string, version st
 				Workloads: workloads,
 			},
 			AppName: appName,
+			TraceId: map[string]string{
+				"traceparent": "parent-trace",
+			},
 		},
 		Status: status,
 	}
