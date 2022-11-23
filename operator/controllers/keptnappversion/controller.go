@@ -96,6 +96,7 @@ func (r *KeptnAppVersionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	if appVersion.Status.AppRevision > 0 && appVersion.Status.AppRevision != appVersion.Spec.AppRevision {
 		// this means that the app specification has changed in the meantime
 		// clear the status and start over
+		appVersion.Status = klcv1alpha1.KeptnAppVersionStatus{}
 
 		// ignoring ctx to don't use this as parent span
 		_, spanAppTrace, err := r.SpanHandler.GetSpan(ctxAppTrace, r.Tracer, appVersion, phase.ShortName)
@@ -104,6 +105,7 @@ func (r *KeptnAppVersionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		}
 		if spanAppTrace != nil {
 			spanAppTrace.SetStatus(codes.Ok, fmt.Sprintf("App Revision changed from %d to %d", appVersion.Status.AppRevision, appVersion.Spec.AppRevision))
+			spanAppTrace.End()
 		}
 		if err := r.SpanHandler.UnbindSpan(appVersion, phase.ShortName); err != nil {
 			r.Log.Error(err, "cannot unbind span")
