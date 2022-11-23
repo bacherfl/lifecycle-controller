@@ -20,13 +20,12 @@ import (
 	"fmt"
 	"time"
 
-	"sigs.k8s.io/controller-runtime/pkg/client"
-
 	"github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -37,6 +36,7 @@ type KeptnAppVersionSpec struct {
 	KeptnAppSpec    `json:",inline"`
 	AppName         string `json:"appName"`
 	PreviousVersion string `json:"previousVersion,omitempty"`
+	AppRevision     int64  `json:"appRevision,omitempty"`
 
 	TraceId map[string]string `json:"traceId,omitempty"`
 }
@@ -62,8 +62,9 @@ type KeptnAppVersionStatus struct {
 	// +kubebuilder:default:=Pending
 	Status common.KeptnState `json:"status,omitempty"`
 
-	StartTime metav1.Time `json:"startTime,omitempty"`
-	EndTime   metav1.Time `json:"endTime,omitempty"`
+	StartTime   metav1.Time `json:"startTime,omitempty"`
+	EndTime     metav1.Time `json:"endTime,omitempty"`
+	AppRevision int64       `json:"appRevision,omitempty"`
 }
 
 type WorkloadStatus struct {

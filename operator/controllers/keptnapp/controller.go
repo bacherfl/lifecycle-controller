@@ -20,10 +20,9 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-logr/logr"
+	klcv1alpha1 "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1"
 	"github.com/keptn/lifecycle-toolkit/operator/controllers/common"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
@@ -33,12 +32,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/go-logr/logr"
-	klcv1alpha1 "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1"
 )
 
 // KeptnAppReconciler reconciles a KeptnApp object
@@ -119,6 +117,20 @@ func (r *KeptnAppReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	if err != nil {
 		r.Log.Error(err, "could not get AppVersion")
 		span.SetStatus(codes.Error, err.Error())
+		return ctrl.Result{}, err
+	}
+
+	// adapt changes to existing appversion
+	updatedAppVersion, err := r.createAppVersion(ctx, app)
+	if err != nil {
+		span.SetStatus(codes.Error, err.Error())
+		return reconcile.Result{}, err
+	}
+	appVersion.Spec = updatedAppVersion.Spec
+	if err := r.Client.Update(ctx, appVersion); err != nil {
+		r.Log.Error(err, "could not update AppVersion")
+		span.SetStatus(codes.Error, err.Error())
+		r.Recorder.Event(app, "Warning", "AppVersionNotCreated", fmt.Sprintf("Could not create KeptnAppVersion / Namespace: %s, Name: %s ", appVersion.Namespace, appVersion.Name))
 		return ctrl.Result{}, err
 	}
 

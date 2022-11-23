@@ -92,6 +92,7 @@ func (a KeptnApp) GenerateAppVersion(previousVersion string, traceContextCarrier
 			KeptnAppSpec:    a.Spec,
 			AppName:         a.Name,
 			PreviousVersion: previousVersion,
+			AppRevision:     a.ObjectMeta.Generation,
 		},
 	}
 }

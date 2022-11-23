@@ -21,25 +21,22 @@ import (
 	"fmt"
 	"time"
 
-	controllercommon "github.com/keptn/lifecycle-toolkit/operator/controllers/common"
-
-	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/trace"
-	"sigs.k8s.io/controller-runtime/pkg/builder"
-	"sigs.k8s.io/controller-runtime/pkg/predicate"
-
 	"github.com/go-logr/logr"
-	"github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/client-go/tools/record"
-	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
 	klcv1alpha1 "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1"
+	"github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
+	controllercommon "github.com/keptn/lifecycle-toolkit/operator/controllers/common"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/propagation"
+	"go.opentelemetry.io/otel/trace"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
 // KeptnAppVersionReconciler reconciles a KeptnAppVersion object
@@ -72,6 +69,7 @@ func (r *KeptnAppVersionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 	r.Log.Info("Searching for Keptn App Version")
 
 	appVersion := &klcv1alpha1.KeptnAppVersion{}
+
 	err := r.Get(ctx, req.NamespacedName, appVersion)
 	if errors.IsNotFound(err) {
 		return reconcile.Result{}, nil
@@ -95,7 +93,35 @@ func (r *KeptnAppVersionReconciler) Reconcile(ctx context.Context, req ctrl.Requ
 		SpanHandler: r.SpanHandler,
 	}
 
+	if appVersion.Status.AppRevision > 0 && appVersion.Status.AppRevision != appVersion.Spec.AppRevision {
+		// this means that the app specification has changed in the meantime
+		// clear the status and start over
+
+		// ignoring ctx to don't use this as parent span
+		_, spanAppTrace, err := r.SpanHandler.GetSpan(ctxAppTrace, r.Tracer, appVersion, phase.ShortName)
+		if err != nil {
+			r.Log.Error(err, "could not get span")
+		}
+		if spanAppTrace != nil {
+			spanAppTrace.SetStatus(codes.Ok, fmt.Sprintf("App Revision changed from %d to %d", appVersion.Status.AppRevision, appVersion.Spec.AppRevision))
+		}
+		if err := r.SpanHandler.UnbindSpan(appVersion, phase.ShortName); err != nil {
+			r.Log.Error(err, "cannot unbind span")
+		}
+
+		if err := r.Status().Update(ctx, appVersion); err != nil {
+			r.Log.Error(err, "Could not update AppVersion status")
+		}
+
+		return reconcile.Result{
+			Requeue: true,
+		}, nil
+
+	}
+
 	if appVersion.Status.CurrentPhase == "" {
+		// update revision of related app
+		appVersion.Status.AppRevision = appVersion.Spec.AppRevision
 		if err := r.SpanHandler.UnbindSpan(appVersion, phase.ShortName); err != nil {
 			r.Log.Error(err, "cannot unbind span")
 		}
