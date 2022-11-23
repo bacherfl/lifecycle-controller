@@ -51,12 +51,6 @@ func TestPhaseItem(t *testing.T) {
 		GetSpanAttributesFunc: func() []attribute.KeyValue {
 			return nil
 		},
-		GetSpanKeyFunc: func(phase string) string {
-			return "span"
-		},
-		GetSpanNameFunc: func(phase string) string {
-			return "name"
-		},
 		CompleteFunc: func() {
 			return
 		},
@@ -117,9 +111,6 @@ func TestPhaseItem(t *testing.T) {
 		CancelRemainingPhasesFunc: func(phase common.KeptnPhaseType) {
 			return
 		},
-		SetPhaseTraceIDFunc: func(phase string, carrier propagation.MapCarrier) {
-			return
-		},
 	}
 
 	wrapper := PhaseItemWrapper{Obj: &phaseItemMock}
@@ -141,12 +132,6 @@ func TestPhaseItem(t *testing.T) {
 
 	_ = wrapper.GetSpanAttributes()
 	require.Len(t, phaseItemMock.GetSpanAttributesCalls(), 1)
-
-	_ = wrapper.GetSpanKey("phase")
-	require.Len(t, phaseItemMock.GetSpanKeyCalls(), 1)
-
-	_ = wrapper.GetSpanName("phase")
-	require.Len(t, phaseItemMock.GetSpanNameCalls(), 1)
 
 	wrapper.Complete()
 	require.Len(t, phaseItemMock.CompleteCalls(), 1)
@@ -207,8 +192,5 @@ func TestPhaseItem(t *testing.T) {
 
 	wrapper.CancelRemainingPhases(common.PhaseAppDeployment)
 	require.Len(t, phaseItemMock.CancelRemainingPhasesCalls(), 1)
-
-	wrapper.SetPhaseTraceID(common.PhaseAppDeployment.LongName, propagation.MapCarrier{})
-	require.Len(t, phaseItemMock.SetPhaseTraceIDCalls(), 1)
 
 }

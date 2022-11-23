@@ -25,7 +25,7 @@ func TestPhaseHandler(t *testing.T) {
 		handler        PhaseHandler
 		object         *v1alpha1.KeptnAppVersion
 		phase          common.KeptnPhaseType
-		reconcilePhase func() (common.KeptnState, error)
+		reconcilePhase func(phaseCtx context.Context) (common.KeptnState, error)
 		wantObject     *v1alpha1.KeptnAppVersion
 		want           *PhaseResult
 		wantErr        error
@@ -64,7 +64,7 @@ func TestPhaseHandler(t *testing.T) {
 				},
 			},
 			phase: common.PhaseAppDeployment,
-			reconcilePhase: func() (common.KeptnState, error) {
+			reconcilePhase: func(phaseCtx context.Context) (common.KeptnState, error) {
 				return "", fmt.Errorf("some err")
 			},
 			want:    &PhaseResult{Continue: false, Result: requeueResult},
@@ -91,7 +91,7 @@ func TestPhaseHandler(t *testing.T) {
 				},
 			},
 			phase: common.PhaseAppDeployment,
-			reconcilePhase: func() (common.KeptnState, error) {
+			reconcilePhase: func(phaseCtx context.Context) (common.KeptnState, error) {
 				return common.StatePending, nil
 			},
 			want:    &PhaseResult{Continue: false, Result: requeueResult},
@@ -118,7 +118,7 @@ func TestPhaseHandler(t *testing.T) {
 				},
 			},
 			phase: common.PhaseAppDeployment,
-			reconcilePhase: func() (common.KeptnState, error) {
+			reconcilePhase: func(phaseCtx context.Context) (common.KeptnState, error) {
 				return common.StateProgressing, nil
 			},
 			want:    &PhaseResult{Continue: false, Result: requeueResult},
@@ -145,7 +145,7 @@ func TestPhaseHandler(t *testing.T) {
 				},
 			},
 			phase: common.PhaseAppDeployment,
-			reconcilePhase: func() (common.KeptnState, error) {
+			reconcilePhase: func(phaseCtx context.Context) (common.KeptnState, error) {
 				return common.StateSucceeded, nil
 			},
 			want:    &PhaseResult{Continue: true, Result: requeueResult},
@@ -172,7 +172,7 @@ func TestPhaseHandler(t *testing.T) {
 				},
 			},
 			phase: common.PhaseAppPreEvaluation,
-			reconcilePhase: func() (common.KeptnState, error) {
+			reconcilePhase: func(phaseCtx context.Context) (common.KeptnState, error) {
 				return common.StateFailed, nil
 			},
 			want:    &PhaseResult{Continue: false, Result: ctrl.Result{}},
@@ -200,7 +200,7 @@ func TestPhaseHandler(t *testing.T) {
 				},
 			},
 			phase: common.PhaseAppPreEvaluation,
-			reconcilePhase: func() (common.KeptnState, error) {
+			reconcilePhase: func(phaseCtx context.Context) (common.KeptnState, error) {
 				return common.StateUnknown, nil
 			},
 			want:    &PhaseResult{Continue: false, Result: requeueResult},

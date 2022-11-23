@@ -8,6 +8,7 @@ import (
 	"github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
 	apicommon "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -22,10 +23,11 @@ import (
 
 type TaskHandler struct {
 	client.Client
-	Recorder record.EventRecorder
-	Log      logr.Logger
-	Tracer   trace.Tracer
-	Scheme   *runtime.Scheme
+	Recorder    record.EventRecorder
+	Log         logr.Logger
+	Tracer      trace.Tracer
+	Scheme      *runtime.Scheme
+	SpanHandler ISpanHandler
 }
 
 type TaskCreateAttributes struct {
@@ -34,7 +36,7 @@ type TaskCreateAttributes struct {
 	CheckType      common.CheckType
 }
 
-func (r TaskHandler) ReconcileTasks(ctx context.Context, reconcileObject client.Object, taskCreateAttributes TaskCreateAttributes) ([]klcv1alpha1.TaskStatus, apicommon.StatusSummary, error) {
+func (r TaskHandler) ReconcileTasks(ctx context.Context, phaseCtx context.Context, reconcileObject client.Object, taskCreateAttributes TaskCreateAttributes) ([]klcv1alpha1.TaskStatus, apicommon.StatusSummary, error) {
 	piWrapper, err := NewPhaseItemWrapperFromClientObject(reconcileObject)
 	if err != nil {
 		return nil, apicommon.StatusSummary{}, err
@@ -103,10 +105,26 @@ func (r TaskHandler) ReconcileTasks(ctx context.Context, reconcileObject client.
 			}
 			taskStatus.TaskName = taskName
 			taskStatus.SetStartTime()
+			_, _, err = r.SpanHandler.GetSpan(phaseCtx, r.Tracer, task, "")
+			if err != nil {
+				r.Log.Error(err, "could not get span")
+			}
 		} else {
+			_, spanTaskTrace, err := r.SpanHandler.GetSpan(phaseCtx, r.Tracer, task, "")
+			if err != nil {
+				r.Log.Error(err, "could not get span")
+			}
 			// Update state of Task if it is already created
 			taskStatus.Status = task.Status.Status
 			if taskStatus.Status.IsCompleted() {
+				if taskStatus.Status.IsSucceeded() {
+					spanTaskTrace.AddEvent(task.Name + " has finished")
+					spanTaskTrace.SetStatus(codes.Ok, "Finished")
+					spanTaskTrace.End()
+					if err := r.SpanHandler.UnbindSpan(task, ""); err != nil {
+						r.Log.Error(err, "Could not unbind span")
+					}
+				}
 				taskStatus.SetEndTime()
 			}
 		}

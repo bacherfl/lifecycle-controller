@@ -40,10 +40,7 @@ type PhaseItem interface {
 	GenerateTask(traceContextCarrier propagation.MapCarrier, taskDefinition string, checkType common.CheckType) klcv1alpha1.KeptnTask
 	GenerateEvaluation(traceContextCarrier propagation.MapCarrier, evaluationDefinition string, checkType common.CheckType) klcv1alpha1.KeptnEvaluation
 	GetSpanAttributes() []attribute.KeyValue
-	GetSpanKey(phase string) string
-	GetSpanName(phase string) string
 	SetSpanAttributes(span trace.Span)
-	SetPhaseTraceID(phase string, carrier propagation.MapCarrier)
 	CancelRemainingPhases(phase common.KeptnPhaseType)
 }
 
@@ -159,18 +156,6 @@ func (pw PhaseItemWrapper) GetSpanAttributes() []attribute.KeyValue {
 	return pw.Obj.GetSpanAttributes()
 }
 
-func (pw PhaseItemWrapper) GetSpanKey(phase string) string {
-	return pw.Obj.GetSpanKey(phase)
-}
-
-func (pw PhaseItemWrapper) GetSpanName(phase string) string {
-	return pw.Obj.GetSpanName(phase)
-}
-
 func (pw PhaseItemWrapper) CancelRemainingPhases(phase common.KeptnPhaseType) {
 	pw.Obj.CancelRemainingPhases(phase)
-}
-
-func (pw PhaseItemWrapper) SetPhaseTraceID(phase string, carrier propagation.MapCarrier) {
-	pw.Obj.SetPhaseTraceID(phase, carrier)
 }

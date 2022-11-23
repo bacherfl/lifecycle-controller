@@ -7,6 +7,7 @@ import (
 	"github.com/go-logr/logr"
 	apicommon "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -21,10 +22,11 @@ import (
 
 type EvaluationHandler struct {
 	client.Client
-	Recorder record.EventRecorder
-	Log      logr.Logger
-	Tracer   trace.Tracer
-	Scheme   *runtime.Scheme
+	Recorder    record.EventRecorder
+	Log         logr.Logger
+	Tracer      trace.Tracer
+	Scheme      *runtime.Scheme
+	SpanHandler ISpanHandler
 }
 
 type EvaluationCreateAttributes struct {
@@ -33,7 +35,7 @@ type EvaluationCreateAttributes struct {
 	CheckType            apicommon.CheckType
 }
 
-func (r EvaluationHandler) ReconcileEvaluations(ctx context.Context, reconcileObject client.Object, evaluationCreateAttributes EvaluationCreateAttributes) ([]klcv1alpha1.EvaluationStatus, apicommon.StatusSummary, error) {
+func (r EvaluationHandler) ReconcileEvaluations(ctx context.Context, phaseCtx context.Context, reconcileObject client.Object, evaluationCreateAttributes EvaluationCreateAttributes) ([]klcv1alpha1.EvaluationStatus, apicommon.StatusSummary, error) {
 	piWrapper, err := NewPhaseItemWrapperFromClientObject(reconcileObject)
 	if err != nil {
 		return nil, apicommon.StatusSummary{}, err
@@ -102,10 +104,26 @@ func (r EvaluationHandler) ReconcileEvaluations(ctx context.Context, reconcileOb
 			}
 			evaluationStatus.EvaluationName = evaluationName
 			evaluationStatus.SetStartTime()
+			_, _, err = r.SpanHandler.GetSpan(phaseCtx, r.Tracer, evaluation, "")
+			if err != nil {
+				r.Log.Error(err, "could not get span")
+			}
 		} else {
+			_, spanEvaluationTrace, err := r.SpanHandler.GetSpan(phaseCtx, r.Tracer, evaluation, "")
+			if err != nil {
+				r.Log.Error(err, "could not get span")
+			}
 			// Update state of Evaluation if it is already created
 			evaluationStatus.Status = evaluation.Status.OverallStatus
 			if evaluationStatus.Status.IsCompleted() {
+				if evaluationStatus.Status.IsSucceeded() {
+					spanEvaluationTrace.AddEvent(evaluation.Name + " has finished")
+					spanEvaluationTrace.SetStatus(codes.Ok, "Finished")
+					spanEvaluationTrace.End()
+					if err := r.SpanHandler.UnbindSpan(evaluation, ""); err != nil {
+						r.Log.Error(err, "Could not unbind span")
+					}
+				}
 				evaluationStatus.SetEndTime()
 			}
 		}
