@@ -6,9 +6,7 @@ import (
 
 	"github.com/go-logr/logr"
 	apicommon "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -146,22 +144,12 @@ func (r EvaluationHandler) CreateKeptnEvaluation(ctx context.Context, namespace 
 		return "", err
 	}
 
-	ctx, span := r.Tracer.Start(ctx, evaluationCreateAttributes.SpanName, trace.WithSpanKind(trace.SpanKindProducer))
-	defer span.End()
-
-	piWrapper.SetSpanAttributes(span)
-
-	// create TraceContext
-	// follow up with a Keptn propagator that JSON-encoded the OTel map into our own key
-	traceContextCarrier := propagation.MapCarrier{}
-	otel.GetTextMapPropagator().Inject(ctx, traceContextCarrier)
-
 	phase := apicommon.KeptnPhaseType{
 		ShortName: "KeptnEvaluationCreate",
 		LongName:  "Keptn Evaluation Create",
 	}
 
-	newEvaluation := piWrapper.GenerateEvaluation(traceContextCarrier, evaluationCreateAttributes.EvaluationDefinition, evaluationCreateAttributes.CheckType)
+	newEvaluation := piWrapper.GenerateEvaluation(evaluationCreateAttributes.EvaluationDefinition, evaluationCreateAttributes.CheckType)
 	err = controllerutil.SetControllerReference(reconcileObject, &newEvaluation, r.Scheme)
 	if err != nil {
 		r.Log.Error(err, "could not set controller reference:")

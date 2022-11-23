@@ -7,7 +7,6 @@ import (
 	lfcv1alpha1 "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1"
 	keptncommon "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"sync"
 	"time"
@@ -25,10 +24,10 @@ import (
 // 			CompleteFunc: func()  {
 // 				panic("mock out the Complete method")
 // 			},
-// 			GenerateEvaluationFunc: func(traceContextCarrier propagation.MapCarrier, evaluationDefinition string, checkType keptncommon.CheckType) lfcv1alpha1.KeptnEvaluation {
+// 			GenerateEvaluationFunc: func(evaluationDefinition string, checkType keptncommon.CheckType) lfcv1alpha1.KeptnEvaluation {
 // 				panic("mock out the GenerateEvaluation method")
 // 			},
-// 			GenerateTaskFunc: func(traceContextCarrier propagation.MapCarrier, taskDefinition string, checkType keptncommon.CheckType) lfcv1alpha1.KeptnTask {
+// 			GenerateTaskFunc: func(taskDefinition string, checkType keptncommon.CheckType) lfcv1alpha1.KeptnTask {
 // 				panic("mock out the GenerateTask method")
 // 			},
 // 			GetAppNameFunc: func() string {
@@ -111,10 +110,10 @@ type PhaseItemMock struct {
 	CompleteFunc func()
 
 	// GenerateEvaluationFunc mocks the GenerateEvaluation method.
-	GenerateEvaluationFunc func(traceContextCarrier propagation.MapCarrier, evaluationDefinition string, checkType keptncommon.CheckType) lfcv1alpha1.KeptnEvaluation
+	GenerateEvaluationFunc func(evaluationDefinition string, checkType keptncommon.CheckType) lfcv1alpha1.KeptnEvaluation
 
 	// GenerateTaskFunc mocks the GenerateTask method.
-	GenerateTaskFunc func(traceContextCarrier propagation.MapCarrier, taskDefinition string, checkType keptncommon.CheckType) lfcv1alpha1.KeptnTask
+	GenerateTaskFunc func(taskDefinition string, checkType keptncommon.CheckType) lfcv1alpha1.KeptnTask
 
 	// GetAppNameFunc mocks the GetAppName method.
 	GetAppNameFunc func() string
@@ -194,8 +193,6 @@ type PhaseItemMock struct {
 		}
 		// GenerateEvaluation holds details about calls to the GenerateEvaluation method.
 		GenerateEvaluation []struct {
-			// TraceContextCarrier is the traceContextCarrier argument value.
-			TraceContextCarrier propagation.MapCarrier
 			// EvaluationDefinition is the evaluationDefinition argument value.
 			EvaluationDefinition string
 			// CheckType is the checkType argument value.
@@ -203,8 +200,6 @@ type PhaseItemMock struct {
 		}
 		// GenerateTask holds details about calls to the GenerateTask method.
 		GenerateTask []struct {
-			// TraceContextCarrier is the traceContextCarrier argument value.
-			TraceContextCarrier propagation.MapCarrier
 			// TaskDefinition is the taskDefinition argument value.
 			TaskDefinition string
 			// CheckType is the checkType argument value.
@@ -369,35 +364,31 @@ func (mock *PhaseItemMock) CompleteCalls() []struct {
 }
 
 // GenerateEvaluation calls GenerateEvaluationFunc.
-func (mock *PhaseItemMock) GenerateEvaluation(traceContextCarrier propagation.MapCarrier, evaluationDefinition string, checkType keptncommon.CheckType) lfcv1alpha1.KeptnEvaluation {
+func (mock *PhaseItemMock) GenerateEvaluation(evaluationDefinition string, checkType keptncommon.CheckType) lfcv1alpha1.KeptnEvaluation {
 	if mock.GenerateEvaluationFunc == nil {
 		panic("PhaseItemMock.GenerateEvaluationFunc: method is nil but PhaseItem.GenerateEvaluation was just called")
 	}
 	callInfo := struct {
-		TraceContextCarrier  propagation.MapCarrier
 		EvaluationDefinition string
 		CheckType            keptncommon.CheckType
 	}{
-		TraceContextCarrier:  traceContextCarrier,
 		EvaluationDefinition: evaluationDefinition,
 		CheckType:            checkType,
 	}
 	mock.lockGenerateEvaluation.Lock()
 	mock.calls.GenerateEvaluation = append(mock.calls.GenerateEvaluation, callInfo)
 	mock.lockGenerateEvaluation.Unlock()
-	return mock.GenerateEvaluationFunc(traceContextCarrier, evaluationDefinition, checkType)
+	return mock.GenerateEvaluationFunc(evaluationDefinition, checkType)
 }
 
 // GenerateEvaluationCalls gets all the calls that were made to GenerateEvaluation.
 // Check the length with:
 //     len(mockedPhaseItem.GenerateEvaluationCalls())
 func (mock *PhaseItemMock) GenerateEvaluationCalls() []struct {
-	TraceContextCarrier  propagation.MapCarrier
 	EvaluationDefinition string
 	CheckType            keptncommon.CheckType
 } {
 	var calls []struct {
-		TraceContextCarrier  propagation.MapCarrier
 		EvaluationDefinition string
 		CheckType            keptncommon.CheckType
 	}
@@ -408,37 +399,33 @@ func (mock *PhaseItemMock) GenerateEvaluationCalls() []struct {
 }
 
 // GenerateTask calls GenerateTaskFunc.
-func (mock *PhaseItemMock) GenerateTask(traceContextCarrier propagation.MapCarrier, taskDefinition string, checkType keptncommon.CheckType) lfcv1alpha1.KeptnTask {
+func (mock *PhaseItemMock) GenerateTask(taskDefinition string, checkType keptncommon.CheckType) lfcv1alpha1.KeptnTask {
 	if mock.GenerateTaskFunc == nil {
 		panic("PhaseItemMock.GenerateTaskFunc: method is nil but PhaseItem.GenerateTask was just called")
 	}
 	callInfo := struct {
-		TraceContextCarrier propagation.MapCarrier
-		TaskDefinition      string
-		CheckType           keptncommon.CheckType
+		TaskDefinition string
+		CheckType      keptncommon.CheckType
 	}{
-		TraceContextCarrier: traceContextCarrier,
-		TaskDefinition:      taskDefinition,
-		CheckType:           checkType,
+		TaskDefinition: taskDefinition,
+		CheckType:      checkType,
 	}
 	mock.lockGenerateTask.Lock()
 	mock.calls.GenerateTask = append(mock.calls.GenerateTask, callInfo)
 	mock.lockGenerateTask.Unlock()
-	return mock.GenerateTaskFunc(traceContextCarrier, taskDefinition, checkType)
+	return mock.GenerateTaskFunc(taskDefinition, checkType)
 }
 
 // GenerateTaskCalls gets all the calls that were made to GenerateTask.
 // Check the length with:
 //     len(mockedPhaseItem.GenerateTaskCalls())
 func (mock *PhaseItemMock) GenerateTaskCalls() []struct {
-	TraceContextCarrier propagation.MapCarrier
-	TaskDefinition      string
-	CheckType           keptncommon.CheckType
+	TaskDefinition string
+	CheckType      keptncommon.CheckType
 } {
 	var calls []struct {
-		TraceContextCarrier propagation.MapCarrier
-		TaskDefinition      string
-		CheckType           keptncommon.CheckType
+		TaskDefinition string
+		CheckType      keptncommon.CheckType
 	}
 	mock.lockGenerateTask.RLock()
 	calls = mock.calls.GenerateTask

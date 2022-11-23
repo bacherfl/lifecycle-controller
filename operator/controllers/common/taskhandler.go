@@ -7,9 +7,7 @@ import (
 	"github.com/go-logr/logr"
 	"github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
 	apicommon "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
-	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/codes"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -147,22 +145,12 @@ func (r TaskHandler) CreateKeptnTask(ctx context.Context, namespace string, reco
 		return "", err
 	}
 
-	ctx, span := r.Tracer.Start(ctx, taskCreateAttributes.SpanName, trace.WithSpanKind(trace.SpanKindProducer))
-	defer span.End()
-
-	piWrapper.SetSpanAttributes(span)
-
-	// create TraceContext
-	// follow up with a Keptn propagator that JSON-encoded the OTel map into our own key
-	traceContextCarrier := propagation.MapCarrier{}
-	otel.GetTextMapPropagator().Inject(ctx, traceContextCarrier)
-
 	phase := apicommon.KeptnPhaseType{
 		ShortName: "KeptnTaskCreate",
 		LongName:  "Keptn Task Create",
 	}
 
-	newTask := piWrapper.GenerateTask(traceContextCarrier, taskCreateAttributes.TaskDefinition, taskCreateAttributes.CheckType)
+	newTask := piWrapper.GenerateTask(taskCreateAttributes.TaskDefinition, taskCreateAttributes.CheckType)
 	err = controllerutil.SetControllerReference(reconcileObject, &newTask, r.Scheme)
 	if err != nil {
 		r.Log.Error(err, "could not set controller reference:")

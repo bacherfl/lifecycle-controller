@@ -7,7 +7,6 @@ import (
 	"github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
 	apicommon "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -37,8 +36,8 @@ type PhaseItem interface {
 	GetPostDeploymentEvaluations() []string
 	GetPreDeploymentEvaluationTaskStatus() []klcv1alpha1.EvaluationStatus
 	GetPostDeploymentEvaluationTaskStatus() []klcv1alpha1.EvaluationStatus
-	GenerateTask(traceContextCarrier propagation.MapCarrier, taskDefinition string, checkType common.CheckType) klcv1alpha1.KeptnTask
-	GenerateEvaluation(traceContextCarrier propagation.MapCarrier, evaluationDefinition string, checkType common.CheckType) klcv1alpha1.KeptnEvaluation
+	GenerateTask(taskDefinition string, checkType common.CheckType) klcv1alpha1.KeptnTask
+	GenerateEvaluation(evaluationDefinition string, checkType common.CheckType) klcv1alpha1.KeptnEvaluation
 	GetSpanAttributes() []attribute.KeyValue
 	SetSpanAttributes(span trace.Span)
 	CancelRemainingPhases(phase common.KeptnPhaseType)
@@ -140,12 +139,12 @@ func (pw PhaseItemWrapper) GetPostDeploymentEvaluationTaskStatus() []klcv1alpha1
 	return pw.Obj.GetPostDeploymentEvaluationTaskStatus()
 }
 
-func (pw PhaseItemWrapper) GenerateTask(traceContextCarrier propagation.MapCarrier, taskDefinition string, checkType common.CheckType) klcv1alpha1.KeptnTask {
-	return pw.Obj.GenerateTask(traceContextCarrier, taskDefinition, checkType)
+func (pw PhaseItemWrapper) GenerateTask(taskDefinition string, checkType common.CheckType) klcv1alpha1.KeptnTask {
+	return pw.Obj.GenerateTask(taskDefinition, checkType)
 }
 
-func (pw PhaseItemWrapper) GenerateEvaluation(traceContextCarrier propagation.MapCarrier, evaluationDefinition string, checkType common.CheckType) klcv1alpha1.KeptnEvaluation {
-	return pw.Obj.GenerateEvaluation(traceContextCarrier, evaluationDefinition, checkType)
+func (pw PhaseItemWrapper) GenerateEvaluation(evaluationDefinition string, checkType common.CheckType) klcv1alpha1.KeptnEvaluation {
+	return pw.Obj.GenerateEvaluation(evaluationDefinition, checkType)
 }
 
 func (pw PhaseItemWrapper) SetSpanAttributes(span trace.Span) {

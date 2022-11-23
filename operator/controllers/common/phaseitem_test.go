@@ -9,7 +9,6 @@ import (
 	"github.com/keptn/lifecycle-toolkit/operator/controllers/common/fake"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/trace"
 )
 
@@ -99,10 +98,10 @@ func TestPhaseItem(t *testing.T) {
 		GetPostDeploymentEvaluationTaskStatusFunc: func() []v1alpha1.EvaluationStatus {
 			return nil
 		},
-		GenerateTaskFunc: func(traceContextCarrier propagation.MapCarrier, taskDefinition string, checkType common.CheckType) v1alpha1.KeptnTask {
+		GenerateTaskFunc: func(taskDefinition string, checkType common.CheckType) v1alpha1.KeptnTask {
 			return v1alpha1.KeptnTask{}
 		},
-		GenerateEvaluationFunc: func(traceContextCarrier propagation.MapCarrier, evaluationDefinition string, checkType common.CheckType) v1alpha1.KeptnEvaluation {
+		GenerateEvaluationFunc: func(evaluationDefinition string, checkType common.CheckType) v1alpha1.KeptnEvaluation {
 			return v1alpha1.KeptnEvaluation{}
 		},
 		SetSpanAttributesFunc: func(span trace.Span) {
@@ -181,10 +180,10 @@ func TestPhaseItem(t *testing.T) {
 	_ = wrapper.GetPostDeploymentEvaluationTaskStatus()
 	require.Len(t, phaseItemMock.GetPostDeploymentEvaluationTaskStatusCalls(), 1)
 
-	_ = wrapper.GenerateTask(nil, "", common.PostDeploymentCheckType)
+	_ = wrapper.GenerateTask("", common.PostDeploymentCheckType)
 	require.Len(t, phaseItemMock.GenerateTaskCalls(), 1)
 
-	_ = wrapper.GenerateEvaluation(nil, "", common.PostDeploymentCheckType)
+	_ = wrapper.GenerateEvaluation("", common.PostDeploymentCheckType)
 	require.Len(t, phaseItemMock.GenerateEvaluationCalls(), 1)
 
 	wrapper.SetSpanAttributes(nil)
