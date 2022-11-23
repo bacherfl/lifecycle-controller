@@ -3,6 +3,7 @@ package common
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
 	"github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
@@ -118,10 +119,14 @@ func (r TaskHandler) ReconcileTasks(ctx context.Context, phaseCtx context.Contex
 				if taskStatus.Status.IsSucceeded() {
 					spanTaskTrace.AddEvent(task.Name + " has finished")
 					spanTaskTrace.SetStatus(codes.Ok, "Finished")
-					spanTaskTrace.End()
-					if err := r.SpanHandler.UnbindSpan(task, ""); err != nil {
-						r.Log.Error(err, "Could not unbind span")
-					}
+				} else {
+					spanTaskTrace.AddEvent(task.Name + " has failed")
+					r.setTaskFailureEvents(task, spanTaskTrace)
+					spanTaskTrace.SetStatus(codes.Error, "Failed")
+				}
+				spanTaskTrace.End()
+				if err := r.SpanHandler.UnbindSpan(task, ""); err != nil {
+					r.Log.Error(err, "Could not unbind span")
 				}
 				taskStatus.SetEndTime()
 			}
@@ -164,4 +169,8 @@ func (r TaskHandler) CreateKeptnTask(ctx context.Context, namespace string, reco
 	RecordEvent(r.Recorder, phase, "Normal", reconcileObject, "Created", "created", piWrapper.GetVersion())
 
 	return newTask.Name, nil
+}
+
+func (r TaskHandler) setTaskFailureEvents(task *klcv1alpha1.KeptnTask, spanTrace trace.Span) {
+	spanTrace.AddEvent(fmt.Sprintf("task '%s' failed with reason: '%s'", task.Name, task.Status.Message), trace.WithTimestamp(time.Now().UTC()))
 }

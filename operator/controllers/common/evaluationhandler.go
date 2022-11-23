@@ -3,8 +3,10 @@ package common
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-logr/logr"
+	"github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
 	apicommon "github.com/keptn/lifecycle-toolkit/operator/api/v1alpha1/common"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
@@ -117,10 +119,14 @@ func (r EvaluationHandler) ReconcileEvaluations(ctx context.Context, phaseCtx co
 				if evaluationStatus.Status.IsSucceeded() {
 					spanEvaluationTrace.AddEvent(evaluation.Name + " has finished")
 					spanEvaluationTrace.SetStatus(codes.Ok, "Finished")
-					spanEvaluationTrace.End()
-					if err := r.SpanHandler.UnbindSpan(evaluation, ""); err != nil {
-						r.Log.Error(err, "Could not unbind span")
-					}
+				} else {
+					spanEvaluationTrace.AddEvent(evaluation.Name + " has failed")
+					r.setEvaluationFailureEvents(evaluation, spanEvaluationTrace)
+					spanEvaluationTrace.SetStatus(codes.Error, "Failed")
+				}
+				spanEvaluationTrace.End()
+				if err := r.SpanHandler.UnbindSpan(evaluation, ""); err != nil {
+					r.Log.Error(err, "Could not unbind span")
 				}
 				evaluationStatus.SetEndTime()
 			}
@@ -163,4 +169,12 @@ func (r EvaluationHandler) CreateKeptnEvaluation(ctx context.Context, namespace 
 	RecordEvent(r.Recorder, phase, "Normal", reconcileObject, "Created", "created", piWrapper.GetVersion())
 
 	return newEvaluation.Name, nil
+}
+
+func (r EvaluationHandler) setEvaluationFailureEvents(evaluation *klcv1alpha1.KeptnEvaluation, spanTrace trace.Span) {
+	for k, v := range evaluation.Status.EvaluationStatus {
+		if v.Status == common.StateFailed {
+			spanTrace.AddEvent(fmt.Sprintf("evaluation of '%s' failed with value: '%s' and reason: '%s'", k, v.Value, v.Message), trace.WithTimestamp(time.Now().UTC()))
+		}
+	}
 }
