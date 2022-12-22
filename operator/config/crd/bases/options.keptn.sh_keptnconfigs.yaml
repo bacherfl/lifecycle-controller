@@ -35,9 +35,9 @@ spec:
           spec:
             description: KeptnConfigSpec defines the desired state of KeptnConfig
             properties:
-              foo:
-                description: Foo is an example field of KeptnConfig. Edit keptnconfig_types.go
-                  to remove/update
+              OTelCollectorUrl:
+                description: OTelCollectorUrl can be used to set the Open Telemetry
+                  collector that the operator should use
                 type: string
             type: object
           status:
@@ -47,4 +47,4 @@ spec:
     served: true
     storage: true
     subresources:
-      status: { }
+      status: {}
