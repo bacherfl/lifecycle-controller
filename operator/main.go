@@ -41,9 +41,7 @@ import (
 	otelprom "go.opentelemetry.io/otel/exporters/prometheus"
 	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/metric/unit"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
-	"go.opentelemetry.io/otel/sdk/trace"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -190,21 +188,30 @@ func main() {
 	// Enabling OTel
 	//  TODO fetch collector URL from default config that is generated with init container and use it here
 	oTelCollectorUrl := ""
-	tpOptions, err := controllercommon.GetOTelTracerProviderOptions(oTelCollectorUrl)
-	if err != nil {
+
+	if err := controllercommon.GetOtelInstance().InitOtelCollector(oTelCollectorUrl); err != nil {
 		setupLog.Error(err, "unable to initialize OTel tracer options")
 	}
 
-	tp := trace.NewTracerProvider(tpOptions...)
-
 	defer func() {
-		if err := tp.Shutdown(context.Background()); err != nil {
-			setupLog.Error(err, "unable to shutdown OTel exporter")
-			os.Exit(1)
-		}
+		controllercommon.GetOtelInstance().ShutDown()
 	}()
-	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+
+	//tpOptions, err := controllercommon.GetOTelTracerProviderOptions(oTelCollectorUrl)
+	//if err != nil {
+	//	setupLog.Error(err, "unable to initialize OTel tracer options")
+	//}
+	//
+	//tp := trace.NewTracerProvider(tpOptions...)
+	//
+	//defer func() {
+	//	if err := tp.Shutdown(context.Background()); err != nil {
+	//		setupLog.Error(err, "unable to shutdown OTel exporter")
+	//		os.Exit(1)
+	//	}
+	//}()
+	//otel.SetTracerProvider(tp)
+	//otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,

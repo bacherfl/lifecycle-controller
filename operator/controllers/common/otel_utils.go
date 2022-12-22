@@ -3,6 +3,10 @@ package common
 import (
 	"context"
 	"fmt"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/propagation"
+	"os"
+	"sync"
 	"time"
 
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
@@ -20,7 +24,42 @@ var (
 	gitCommit    string
 	buildTime    string
 	buildVersion string
+	otelInitOnce sync.Once
 )
+
+type otelConfig struct {
+	tracerProvider *trace.TracerProvider
+}
+
+// do not export this type to make it accessible only via the GetInstance method (i.e Singleton)
+var otelInstance *otelConfig
+
+func GetOtelInstance() *otelConfig {
+	// initialize once
+	otelInitOnce.Do(func() {
+		otelInstance = &otelConfig{}
+	})
+
+	return otelInstance
+}
+
+func (o *otelConfig) InitOtelCollector(otelCollectorUrl string) error {
+	tpOptions, err := GetOTelTracerProviderOptions(otelCollectorUrl)
+	if err != nil {
+		return err
+	}
+
+	o.tracerProvider = trace.NewTracerProvider(tpOptions...)
+	otel.SetTracerProvider(o.tracerProvider)
+	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+	return nil
+}
+
+func (o *otelConfig) ShutDown() {
+	if err := o.tracerProvider.Shutdown(context.Background()); err != nil {
+		os.Exit(1)
+	}
+}
 
 func GetOTelTracerProviderOptions(oTelCollectorUrl string) ([]trace.TracerProviderOption, error) {
 	var tracerProviderOptions []trace.TracerProviderOption

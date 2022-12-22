@@ -23,9 +23,6 @@ import (
 	"github.com/go-logr/logr"
 	controllercommon "github.com/keptn/lifecycle-toolkit/operator/controllers/common"
 	controllererrors "github.com/keptn/lifecycle-toolkit/operator/controllers/errors"
-	"go.opentelemetry.io/otel"
-	"go.opentelemetry.io/otel/propagation"
-	"go.opentelemetry.io/otel/sdk/trace"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -63,13 +60,17 @@ func (r *KeptnConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 
 	r.Log.Info("Reconciling Keptn Config", "config", config.Name)
 
-	tpOptions, err := controllercommon.GetOTelTracerProviderOptions(config.Spec.OTelCollectorUrl)
-	if err != nil {
+	if err := controllercommon.GetOtelInstance().InitOtelCollector(config.Spec.OTelCollectorUrl); err != nil {
 		r.Log.Error(err, "unable to initialize OTel tracer options")
 	}
-	tp := trace.NewTracerProvider(tpOptions...)
-	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+
+	//tpOptions, err := controllercommon.GetOTelTracerProviderOptions(config.Spec.OTelCollectorUrl)
+	//if err != nil {
+	//	r.Log.Error(err, "unable to initialize OTel tracer options")
+	//}
+	//tp := trace.NewTracerProvider(tpOptions...)
+	//otel.SetTracerProvider(tp)
+	//otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
 	return ctrl.Result{}, nil
 }
