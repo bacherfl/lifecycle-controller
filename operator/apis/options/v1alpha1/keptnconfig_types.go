@@ -23,6 +23,8 @@ import (
 // KeptnConfigSpec defines the desired state of KeptnConfig
 type KeptnConfigSpec struct {
 
+	//+kubebuilder:default=""
+
 	// OTelCollectorUrl can be used to set the Open Telemetry collector that the operator should use
 	OTelCollectorUrl string `json:"OTelCollectorUrl,omitempty"`
 }

@@ -36,6 +36,7 @@ spec:
             description: KeptnConfigSpec defines the desired state of KeptnConfig
             properties:
               OTelCollectorUrl:
+                default: ""
                 description: OTelCollectorUrl can be used to set the Open Telemetry
                   collector that the operator should use
                 type: string

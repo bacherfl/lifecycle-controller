@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/go-logr/logr"
 	controllererrors "github.com/keptn/lifecycle-toolkit/operator/controllers/errors"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -35,6 +36,7 @@ import (
 type KeptnConfigReconciler struct {
 	client.Client
 	Scheme *runtime.Scheme
+	Log    logr.Logger
 }
 
 //+kubebuilder:rbac:groups=options.keptn.sh,resources=keptnconfigs,verbs=get;list;watch;create;update;patch;delete
@@ -54,6 +56,8 @@ func (r *KeptnConfigReconciler) Reconcile(ctx context.Context, req ctrl.Request)
 	if err != nil {
 		return reconcile.Result{}, fmt.Errorf(controllererrors.ErrCannotRetrieveConfigMsg, err)
 	}
+
+	r.Log.Info("Reconciling Keptn Config", "config", config.Name)
 
 	return ctrl.Result{}, nil
 }
