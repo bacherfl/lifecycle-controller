@@ -20,9 +20,13 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	otel2 "github.com/keptn/lifecycle-toolkit/operator/otel"
+	flagd "github.com/open-feature/go-sdk-contrib/providers/flagd/pkg"
+	"github.com/open-feature/go-sdk/pkg/openfeature"
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/kelseyhightower/envconfig"
@@ -45,7 +49,6 @@ import (
 	"go.opentelemetry.io/otel/exporters/stdout/stdouttrace"
 	"go.opentelemetry.io/otel/metric/instrument"
 	"go.opentelemetry.io/otel/metric/unit"
-	"go.opentelemetry.io/otel/propagation"
 	"go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	"go.opentelemetry.io/otel/sdk/trace"
@@ -95,6 +98,11 @@ func main() {
 	var probeAddr string
 	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
+
+	// OpenFeature Setup
+	openfeature.SetProvider(flagd.NewProvider(
+		flagd.WithHost("localhost"),
+	))
 
 	// OTEL SETUP
 	// The exporter embeds a default OpenTelemetry Reader and
@@ -203,21 +211,25 @@ func main() {
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
 
 	// Enabling OTel
-	tpOptions, err := getOTelTracerProviderOptions(env)
-	if err != nil {
-		setupLog.Error(err, "unable to initialize OTel tracer options")
-	}
 
-	tp := trace.NewTracerProvider(tpOptions...)
+	otel2.StartOtelExporterConfigurator(context.Background())
 
-	defer func() {
-		if err := tp.Shutdown(context.Background()); err != nil {
-			setupLog.Error(err, "unable to shutdown  OTel exporter")
-			os.Exit(1)
-		}
-	}()
-	otel.SetTracerProvider(tp)
-	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
+	// OLD
+	//tpOptions, err := getOTelTracerProviderOptions(env)
+	//if err != nil {
+	//	setupLog.Error(err, "unable to initialize OTel tracer options")
+	//}
+	//
+	//tp := trace.NewTracerProvider(tpOptions...)
+	//
+	//defer func() {
+	//	if err := tp.Shutdown(context.Background()); err != nil {
+	//		setupLog.Error(err, "unable to shutdown  OTel exporter")
+	//		os.Exit(1)
+	//	}
+	//}()
+	//otel.SetTracerProvider(tp)
+	//otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,
@@ -458,9 +470,31 @@ func getOTelTracerProviderOptions(env envConfig) ([]trace.TracerProviderOption, 
 	}
 	tracerProviderOptions = append(tracerProviderOptions, trace.WithBatcher(stdOutExp))
 
-	if env.OTelCollectorURL != "" {
+	client := openfeature.NewClient("klt")
+
+	maxRetries := 3
+	var otelCollectorURL string
+	for i := 0; i < maxRetries; i++ {
+		otelCollectorURL, err = client.StringValue(context.TODO(), "otel-collector-url", "", openfeature.EvaluationContext{})
+		if err == nil {
+			break
+		}
+
+		if strings.Contains(err.Error(), string(openfeature.ProviderNotReadyCode)) {
+			<-time.After(2 * time.Second)
+			continue
+		}
+		break
+	}
+
+	if err != nil {
+		setupLog.Error(err, "Could not get otel-collector-url from OpenFeature")
+	}
+
+	if otelCollectorURL != "" {
+		setupLog.Info("Got otel-collector-url", "otel-collector-url", otelCollectorURL)
 		// try to set OTel exporter for Jaeger
-		otelExporter, err := newOTelExporter(env)
+		otelExporter, err := newOTelExporter(otelCollectorURL)
 		if err != nil {
 			// log the error, but do not break if Jaeger exporter cannot be created
 			setupLog.Error(err, "Could not set up OTel exporter")
@@ -482,12 +516,12 @@ func newStdOutExporter() (trace.SpanExporter, error) {
 	)
 }
 
-func newOTelExporter(env envConfig) (trace.SpanExporter, error) {
+func newOTelExporter(collectorURL string) (trace.SpanExporter, error) {
 	ctx, cancel := context.WithTimeout(context.TODO(), 3*time.Second)
 	defer cancel()
-	conn, err := grpc.DialContext(ctx, env.OTelCollectorURL, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
+	conn, err := grpc.DialContext(ctx, collectorURL, grpc.WithTransportCredentials(insecure.NewCredentials()), grpc.WithBlock())
 	if err != nil {
-		return nil, fmt.Errorf("failed to create gRPC connection to collector at %s: %w", env.OTelCollectorURL, err)
+		return nil, fmt.Errorf("failed to create gRPC connection to collector at %s: %w", collectorURL, err)
 	}
 	traceExporter, err := otlptracegrpc.New(ctx, otlptracegrpc.WithGRPCConn(conn))
 	if err != nil {

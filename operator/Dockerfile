@@ -22,6 +22,7 @@ COPY hack/ hack/
 COPY api/ api/
 COPY controllers/ controllers/
 COPY webhooks/ webhooks/
+COPY otel/ otel/
 
 # Build
 RUN controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..." && \
