@@ -2,11 +2,13 @@ package main
 
 import (
 	"context"
+	"context"
 	"encoding/json"
 	"flag"
 	"fmt"
 	"github.com/gorilla/mux"
 	keptnprovider "github.com/keptn/lifecycle-toolkit/metrics-adapter/pkg/provider"
+	keptnserver "github.com/keptn/lifecycle-toolkit/metrics-adapter/pkg/server"
 	metricsv1alpha1 "github.com/keptn/lifecycle-toolkit/metrics-operator/api/v1alpha1"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -15,8 +17,13 @@ import (
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/component-base/logs"
 	"k8s.io/klog/v2"
-	"net/http"
 	"os"
+
+	flagd "github.com/open-feature/go-sdk-contrib/providers/flagd/pkg"
+	"github.com/open-feature/go-sdk/pkg/openfeature"
+
+	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/component-base/logs"
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	basecmd "sigs.k8s.io/custom-metrics-apiserver/pkg/cmd"
@@ -45,7 +52,17 @@ func main() {
 	logs.InitLogs()
 	defer logs.FlushLogs()
 
-	go serveMetrics()
+	// OpenFeature Setup
+	openfeature.SetProvider(flagd.NewProvider(
+		flagd.WithHost("localhost"),
+	))
+
+	ctx, _ := context.WithCancel(context.Background())
+	keptnserver.StartServerManager(ctx)
+	//defer func() {
+	//	cancel()
+	//}()
+
 	go recordMetrics()
 
 	fmt.Println("Starting Keptn Metrics Adapter")
