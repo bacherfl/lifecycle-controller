@@ -2,12 +2,20 @@ package server
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"github.com/benbjohnson/clock"
+	"github.com/gorilla/mux"
+	metricsv1alpha1 "github.com/keptn/lifecycle-toolkit/metrics-operator/api/v1alpha1"
 	"github.com/open-feature/go-sdk/pkg/openfeature"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	"net/http"
+	"os"
+	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"strings"
 	"sync"
 	"time"
@@ -87,9 +95,15 @@ func (m *serverManager) setup() error {
 	if serverEnabled && m.server == nil {
 		klog.Infof("serving metrics at localhost:9999/metrics")
 
-		m.server = &http.Server{Addr: ":9999"}
+		router := mux.NewRouter()
+		router.Path("/metrics").Handler(promhttp.Handler())
+		router.Path("/api/v1/metrics/{namespace}/{metric}").HandlerFunc(returnMetric)
 
-		http.Handle("/metrics", promhttp.Handler())
+		m.server = &http.Server{
+			Addr:    ":9999",
+			Handler: router,
+		}
+
 		go func() {
 			err := m.server.ListenAndServe()
 			if err != nil {
@@ -103,4 +117,32 @@ func (m *serverManager) setup() error {
 		}
 	}
 	return nil
+}
+
+func returnMetric(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	namespace := vars["namespace"]
+	metric := vars["metric"]
+
+	scheme := runtime.NewScheme()
+	if err := metricsv1alpha1.AddToScheme(scheme); err != nil {
+		fmt.Println("failed to add metrics to scheme: " + err.Error())
+	}
+	cl, err := ctrlclient.New(config.GetConfigOrDie(), ctrlclient.Options{Scheme: scheme})
+	if err != nil {
+		fmt.Println("failed to create client")
+		os.Exit(1)
+	}
+	metricObj := metricsv1alpha1.Metric{}
+	err = cl.Get(context.Background(), types.NamespacedName{Name: metric, Namespace: namespace}, &metricObj)
+	if err != nil {
+		fmt.Println("failed to list metrics" + err.Error())
+	}
+
+	data := map[string]string{
+		"namespace": namespace,
+		"metric":    metric,
+		"value":     metricObj.Status.Value,
+	}
+	json.NewEncoder(w).Encode(data)
 }

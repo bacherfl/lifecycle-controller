@@ -9,7 +9,6 @@ require (
 	github.com/open-feature/go-sdk v1.1.0
 	github.com/open-feature/go-sdk-contrib/providers/flagd v0.1.2
 	github.com/prometheus/client_golang v1.14.0
-	github.com/prometheus/client_golang v1.12.2
 	k8s.io/apimachinery v0.26.0
 	k8s.io/client-go v0.26.0
 	k8s.io/component-base v0.25.5
@@ -71,9 +70,6 @@ require (
 	github.com/rs/cors v1.8.2 // indirect
 	github.com/rs/xid v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
-	github.com/prometheus/client_model v0.2.0 // indirect
-	github.com/prometheus/common v0.32.1 // indirect
-	github.com/prometheus/procfs v0.7.3 // indirect
 	github.com/spf13/cobra v1.4.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/xeipuuv/gojsonpointer v0.0.0-20190905194746-02993c407bfb // indirect
