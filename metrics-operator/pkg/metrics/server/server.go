@@ -41,6 +41,7 @@ type serverManager struct {
 
 func StartServerManager(ctx context.Context) {
 	smOnce.Do(func() {
+		metrics.gauges = make(map[string]prometheus.Gauge)
 		instance = &serverManager{
 			ticker:   clock.New().Ticker(10 * time.Second),
 			ofClient: openfeature.NewClient("klt"),
