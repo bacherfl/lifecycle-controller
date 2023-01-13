@@ -17,5 +17,8 @@ spec:
     port: 8443
     protocol: TCP
     targetPort: https
+  - name: metrics
+    port: 9999
+    targetPort: 9999
   selector:
     control-plane: controller-manager

@@ -56,7 +56,7 @@ func main() {
 	//	cancel()
 	//}()
 
-	go recordMetrics()
+	recordMetrics()
 
 	fmt.Println("Starting Keptn Metrics Adapter")
 	// initialize the flags, with one custom flag for the message

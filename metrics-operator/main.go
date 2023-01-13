@@ -17,7 +17,10 @@ limitations under the License.
 package main
 
 import (
+	"context"
 	"flag"
+	flagd "github.com/open-feature/go-sdk-contrib/providers/flagd/pkg"
+	"github.com/open-feature/go-sdk/pkg/openfeature"
 	"os"
 
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
@@ -33,6 +36,7 @@ import (
 
 	metricsv1alpha1 "github.com/keptn/lifecycle-toolkit/metrics-operator/api/v1alpha1"
 	"github.com/keptn/lifecycle-toolkit/metrics-operator/controllers"
+	keptnserver "github.com/keptn/lifecycle-toolkit/metrics-operator/pkg/metrics/server"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -64,6 +68,14 @@ func main() {
 	flag.Parse()
 
 	ctrl.SetLogger(zap.New(zap.UseFlagOptions(&opts)))
+
+	// OpenFeature Setup
+	openfeature.SetProvider(flagd.NewProvider(
+		flagd.WithHost("localhost"),
+	))
+
+	ctx, _ := context.WithCancel(context.Background())
+	keptnserver.StartServerManager(ctx)
 
 	mgr, err := ctrl.NewManager(ctrl.GetConfigOrDie(), ctrl.Options{
 		Scheme:                 scheme,

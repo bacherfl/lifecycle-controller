@@ -2,11 +2,6 @@
 FROM --platform=$BUILDPLATFORM golang:1.19.4-alpine3.16 as builder
 
 ARG CONTROLLER_TOOLS_VERSION=v0.9.2
-ARG GIT_HASH
-ARG RELEASE_VERSION
-ARG BUILD_TIME
-ARG TARGETOS
-ARG TARGETARCH
 
 ENV CGO_ENABLED=0
 
@@ -22,6 +17,12 @@ COPY hack/ hack/
 COPY api/ api/
 COPY pkg/ pkg/
 COPY controllers/ controllers/
+
+ARG GIT_HASH
+ARG RELEASE_VERSION
+ARG BUILD_TIME
+ARG TARGETOS
+ARG TARGETARCH
 
 # Build
 RUN controller-gen object:headerFile="hack/boilerplate.go.txt" paths="./..." && \
