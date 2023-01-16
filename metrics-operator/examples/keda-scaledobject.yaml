@@ -1,0 +1,21 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: http-scaledobject
+  namespace: podtato-kubectl
+  labels:
+    deploymentName: podtato-head-entry
+spec:
+  maxReplicaCount: 4
+  minReplicaCount: 1
+  pollingInterval: 3  # Optional. Default: 30 seconds
+  cooldownPeriod:  5 # Optional. Default: 300 seconds
+  scaleTargetRef:
+    name: podtato-head-entry
+  triggers:
+    - type: metrics-api
+      metadata:
+        targetValue: "1.0"
+        activationTargetValue: "0.0"
+        url: "http://klm-controller-manager-metrics-service.keptn-lifecycle-toolkit-system.svc.cluster.local:9999/api/v1/metrics/default/aggregated-data"
+        valueLocation: "value"
