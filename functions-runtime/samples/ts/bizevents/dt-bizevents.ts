@@ -37,7 +37,7 @@ if (dtCredsStr != undefined) {
 
 
 if (context != undefined) {
-    taskContext = json.parse(context)
+    taskContext = JSON.parse(context)
 }
 
 
