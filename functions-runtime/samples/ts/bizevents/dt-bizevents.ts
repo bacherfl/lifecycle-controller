@@ -243,26 +243,47 @@ const t = setTimeout(timeout, timeoutSeconds * 1000);
 // don't hang on the strong ref on t to be cleaned
 Deno.unrefTimer(t)
 
-login().then(v => {
+try {
+    let v = await login()
     const bearer = v['access_token']
     const _id = crypto.randomUUID().toString()
-    postBizEvent(bearer, tenant, _id).then(async w => {
-        console.log("BizEvent Posted")
-        // let the data propagate and avoid eventual consistency issues
-        //await sleep(10000);
-        let ingestedEvent = await getIngestedBizEvent(bearer, tenant, _id)
-        console.log("Ingested Event:")
-        console.log(ingestedEvent['result']['records'])
 
-        let finishedEvent = await getResponseBizEvent(bearer, tenant, _id)
-        console.log("Response Event:")
-        console.log(finishedEvent['result']['records'])
-        // wait for the release.guardian.finished event
+    await postBizEvent(bearer, tenant, _id)
+    console.log("BizEvent Posted")
+    // let the data propagate and avoid eventual consistency issues
+    //await sleep(10000);
+    let ingestedEvent = await getIngestedBizEvent(bearer, tenant, _id)
+    console.log("Ingested Event:")
+    console.log(ingestedEvent['result']['records'])
 
-    }).catch(e => {
-        console.error("Error posting event", e)
-    });
+    // wait for the release.guardian.finished event
+    let finishedEvent = await getResponseBizEvent(bearer, tenant, _id)
+    console.log("Response Event:")
+    console.log(finishedEvent['result']['records'])
+} catch (e) {
+    console.error(e)
+}
 
-}).catch(e => {
-    console.error("Error in login", e)
-})
+//login().then(v => {
+//    const bearer = v['access_token']
+//    const _id = crypto.randomUUID().toString()
+//    postBizEvent(bearer, tenant, _id).then(async w => {
+//        console.log("BizEvent Posted")
+//        // let the data propagate and avoid eventual consistency issues
+//        //await sleep(10000);
+//        let ingestedEvent = await getIngestedBizEvent(bearer, tenant, _id)
+//        console.log("Ingested Event:")
+//        console.log(ingestedEvent['result']['records'])
+//
+//        let finishedEvent = await getResponseBizEvent(bearer, tenant, _id)
+//        console.log("Response Event:")
+//        console.log(finishedEvent['result']['records'])
+//        // wait for the release.guardian.finished event
+//
+//    }).catch(e => {
+//        console.error("Error posting event", e)
+//    });
+//
+//}).catch(e => {
+//    console.error("Error in login", e)
+//})
