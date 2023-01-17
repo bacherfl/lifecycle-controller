@@ -8,13 +8,14 @@ const dtCredsStr = Deno.env.get("SECURE_DATA")
 let client_id;
 let client_secret;
 let tenant;
+let dtCredsObj;
 
 
 if (dtCredsStr != undefined) {
-    dtCreds = JSON.parse(dtCredsStr);
-    client_id = dtCreds.clientID
-    client_secret = dtCreds.clientSecret
-    tenant = dtCreds.Tenant
+    dtCredsObj = JSON.parse(dtCredsStr);
+    client_id = dtCredsObj.clientID
+    client_secret = dtCredsObj.clientSecret
+    tenant = dtCredsObj.Tenant
 } else {
     client_id = Deno.env.get("CLIENT_ID")
     client_secret = Deno.env.get("CLIENT_SECRET")
