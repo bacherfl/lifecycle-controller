@@ -5,9 +5,9 @@ const timeoutSeconds = 60
 const scopes = "storage:events:read storage:events:write environment:roles:viewer"
 const dtCredsStr = Deno.env.get("SECURE_DATA")
 
-let client_id
-let client_secret
-let tenant
+let client_id;
+let client_secret;
+let tenant;
 
 
 if (dtCredsStr != undefined) {
