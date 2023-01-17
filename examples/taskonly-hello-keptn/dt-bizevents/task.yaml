@@ -1,7 +1,7 @@
 apiVersion: lifecycle.keptn.sh/v1alpha2
 kind: KeptnTask
 metadata:
-  name: hello-developer-http
+  name: hello-developer-dt
 spec:
   taskDefinition: hello-keptn-dt
   workload: my-workload

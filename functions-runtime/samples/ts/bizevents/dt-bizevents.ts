@@ -1,14 +1,27 @@
 import * as https from "https://deno.land/std@0.172.0/node/https.ts";
 import * as crypto from "https://deno.land/std@0.172.0/node/crypto.ts";
 
+class TaskContext {
+    workloadName: string
+    workloadVersion: string
+    appName: string
+    appVersion: string
+    taskType: string
+    objectType: string
+}
+
 const timeoutSeconds = 60
 const scopes = "storage:events:read storage:events:write environment:roles:viewer"
 const dtCredsStr = Deno.env.get("SECURE_DATA")
+
+const context = Deno.env.get("CONTEXT")
 
 let client_id;
 let client_secret;
 let tenant;
 let dtCredsObj;
+
+let taskContext: TaskContext
 
 
 if (dtCredsStr != undefined) {
@@ -21,6 +34,12 @@ if (dtCredsStr != undefined) {
     client_secret = Deno.env.get("CLIENT_SECRET")
     tenant = Deno.env.get("TENANT")
 }
+
+
+if (context != undefined) {
+    taskContext = json.parse(context)
+}
+
 
 async function login() {
     const options = {
@@ -68,9 +87,11 @@ async function postBizEvent(bearer, tenant, _id) {
         type: 'reliability.guardian.triggered',
         data: {
             rndvalue: Math.random(),
-            stage: "namespace",
-            appname: "appname",
-            appversion: "appversion",
+            stage: "namespace", // not included in context env var
+            app: taskContext.appName,
+            appVersion: taskContext.appVersion,
+            workload: taskContext.workloadName,
+            workloadVersion: taskContext.workloadVersion
         },
     };
 
@@ -263,27 +284,3 @@ try {
 } catch (e) {
     console.error(e)
 }
-
-//login().then(v => {
-//    const bearer = v['access_token']
-//    const _id = crypto.randomUUID().toString()
-//    postBizEvent(bearer, tenant, _id).then(async w => {
-//        console.log("BizEvent Posted")
-//        // let the data propagate and avoid eventual consistency issues
-//        //await sleep(10000);
-//        let ingestedEvent = await getIngestedBizEvent(bearer, tenant, _id)
-//        console.log("Ingested Event:")
-//        console.log(ingestedEvent['result']['records'])
-//
-//        let finishedEvent = await getResponseBizEvent(bearer, tenant, _id)
-//        console.log("Response Event:")
-//        console.log(finishedEvent['result']['records'])
-//        // wait for the release.guardian.finished event
-//
-//    }).catch(e => {
-//        console.error("Error posting event", e)
-//    });
-//
-//}).catch(e => {
-//    console.error("Error in login", e)
-//})
