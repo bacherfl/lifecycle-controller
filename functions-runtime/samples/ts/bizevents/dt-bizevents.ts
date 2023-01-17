@@ -15,7 +15,7 @@ if (dtCredsStr != undefined) {
     dtCredsObj = JSON.parse(dtCredsStr);
     client_id = dtCredsObj.clientID
     client_secret = dtCredsObj.clientSecret
-    tenant = dtCredsObj.Tenant
+    tenant = dtCredsObj.tenant
 } else {
     client_id = Deno.env.get("CLIENT_ID")
     client_secret = Deno.env.get("CLIENT_SECRET")
