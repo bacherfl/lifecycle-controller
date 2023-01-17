@@ -3,7 +3,7 @@ import * as crypto from "https://deno.land/std@0.172.0/node/crypto.ts";
 
 const timeoutSeconds = 60
 const scopes = "storage:events:read storage:events:write environment:roles:viewer"
-const dtCredsStr = Deno.env.get("SECRET_DATA")
+const dtCredsStr = Deno.env.get("SECURE_DATA")
 
 let client_id
 let client_secret
