@@ -1,0 +1,12 @@
+apiVersion: lifecycle.keptn.sh/v1alpha2
+kind: KeptnTaskDefinition
+metadata:
+  name: hello-keptn-dt
+spec:
+  function:
+    httpRef:
+      url: https://raw.githubusercontent.com/bacherfl/lifecycle-controller/poc/metrics-adapter-feature-flag/functions-runtime/samples/ts/bizevents/dt-bizevents.ts
+    secureParameters:
+      secret: third-gen-secret
+
+
