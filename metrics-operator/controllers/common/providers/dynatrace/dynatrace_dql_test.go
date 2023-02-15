@@ -3,6 +3,7 @@ package dynatrace
 import (
 	"context"
 	"errors"
+	metrics "github.com/keptn/lifecycle-toolkit/metrics-operator/apis/metrics/v1alpha2"
 	"strings"
 	"sync"
 	"testing"
@@ -10,8 +11,7 @@ import (
 
 	"github.com/benbjohnson/clock"
 	"github.com/go-logr/logr"
-	klcv1alpha2 "github.com/keptn/lifecycle-toolkit/operator/apis/lifecycle/v1alpha2"
-	"github.com/keptn/lifecycle-toolkit/operator/controllers/common/providers/dynatrace/client/fake"
+	"github.com/keptn/lifecycle-toolkit/metrics-operator/controllers/common/providers/dynatrace/client/fake"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -50,12 +50,12 @@ func TestGetDQL(t *testing.T) {
 		WithLogger(logr.New(klog.NewKlogr().GetSink())),
 	)
 
-	result, raw, err := dqlProvider.GetMetricValue(context.TODO(), klcv1alpha2.Objective{
-		Name:             "",
-		Query:            "",
-		EvaluationTarget: "",
-	}, klcv1alpha2.KeptnEvaluationProvider{
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{},
+	result, raw, err := dqlProvider.GetMetricValue(context.TODO(), metrics.KeptnMetric{
+		Spec: metrics.KeptnMetricSpec{
+			Query: "",
+		},
+	}, metrics.KeptnMetricProvider{
+		Spec: metrics.KeptnMetricProviderSpec{},
 	})
 
 	require.Nil(t, err)
@@ -90,12 +90,12 @@ func TestGetDQLMultipleRecords(t *testing.T) {
 		WithLogger(logr.New(klog.NewKlogr().GetSink())),
 	)
 
-	result, raw, err := dqlProvider.GetMetricValue(context.TODO(), klcv1alpha2.Objective{
-		Name:             "",
-		Query:            "",
-		EvaluationTarget: "",
-	}, klcv1alpha2.KeptnEvaluationProvider{
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{},
+	result, raw, err := dqlProvider.GetMetricValue(context.TODO(), metrics.KeptnMetric{
+		Spec: metrics.KeptnMetricSpec{
+			Query: "",
+		},
+	}, metrics.KeptnMetricProvider{
+		Spec: metrics.KeptnMetricProviderSpec{},
 	})
 
 	require.Nil(t, err)
@@ -138,12 +138,12 @@ func TestGetDQLTimeout(t *testing.T) {
 
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
-		result, raw, err := dqlProvider.GetMetricValue(context.TODO(), klcv1alpha2.Objective{
-			Name:             "",
-			Query:            "",
-			EvaluationTarget: "",
-		}, klcv1alpha2.KeptnEvaluationProvider{
-			Spec: klcv1alpha2.KeptnEvaluationProviderSpec{},
+		result, raw, err := dqlProvider.GetMetricValue(context.TODO(), metrics.KeptnMetric{
+			Spec: metrics.KeptnMetricSpec{
+				Query: "",
+			},
+		}, metrics.KeptnMetricProvider{
+			Spec: metrics.KeptnMetricProviderSpec{},
 		})
 
 		require.ErrorIs(t, err, ErrDQLQueryTimeout)
@@ -184,12 +184,12 @@ func TestGetDQLCannotPostQuery(t *testing.T) {
 	mockClock := clock.NewMock()
 	dqlProvider.clock = mockClock
 
-	result, raw, err := dqlProvider.GetMetricValue(context.TODO(), klcv1alpha2.Objective{
-		Name:             "",
-		Query:            "",
-		EvaluationTarget: "",
-	}, klcv1alpha2.KeptnEvaluationProvider{
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{},
+	result, raw, err := dqlProvider.GetMetricValue(context.TODO(), metrics.KeptnMetric{
+		Spec: metrics.KeptnMetricSpec{
+			Query: "",
+		},
+	}, metrics.KeptnMetricProvider{
+		Spec: metrics.KeptnMetricProviderSpec{},
 	})
 
 	require.NotNil(t, err, err)
@@ -222,12 +222,12 @@ func TestDQLInitClientWithSecret(t *testing.T) {
 
 	require.NotNil(t, dqlProvider)
 
-	err := dqlProvider.ensureDTClientIsSetUp(context.TODO(), klcv1alpha2.KeptnEvaluationProvider{
+	err := dqlProvider.ensureDTClientIsSetUp(context.TODO(), metrics.KeptnMetricProvider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "dql",
 			Namespace: namespace,
 		},
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{
+		Spec: metrics.KeptnMetricProviderSpec{
 			SecretKeyRef: corev1.SecretKeySelector{
 				LocalObjectReference: corev1.LocalObjectReference{
 					Name: "my-secret",

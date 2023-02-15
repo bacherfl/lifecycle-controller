@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	klcv1alpha2 "github.com/keptn/lifecycle-toolkit/operator/apis/lifecycle/v1alpha2"
-	"github.com/keptn/lifecycle-toolkit/operator/controllers/common/fake"
+	metrics "github.com/keptn/lifecycle-toolkit/metrics-operator/apis/metrics/v1alpha2"
+	"github.com/keptn/lifecycle-toolkit/metrics-operator/controllers/common/fake"
 	"github.com/stretchr/testify/require"
 )
 
@@ -19,8 +19,8 @@ func TestGetSecret_NoKeyDefined(t *testing.T) {
 	defer svr.Close()
 	fakeClient := fake.NewClient()
 
-	p := klcv1alpha2.KeptnEvaluationProvider{
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{
+	p := metrics.KeptnMetricProvider{
+		Spec: metrics.KeptnMetricProviderSpec{
 			TargetServer: svr.URL,
 		},
 	}
@@ -38,8 +38,8 @@ func TestGetSecret_NoSecret(t *testing.T) {
 	defer svr.Close()
 	fakeClient := fake.NewClient()
 
-	p := klcv1alpha2.KeptnEvaluationProvider{
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{
+	p := metrics.KeptnMetricProvider{
+		Spec: metrics.KeptnMetricProviderSpec{
 			TargetServer: svr.URL,
 		},
 	}
@@ -57,8 +57,8 @@ func TestGetSecret_NoTokenData(t *testing.T) {
 	defer svr.Close()
 	fakeClient := fake.NewClient()
 
-	p := klcv1alpha2.KeptnEvaluationProvider{
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{
+	p := metrics.KeptnMetricProvider{
+		Spec: metrics.KeptnMetricProviderSpec{
 			TargetServer: svr.URL,
 		},
 	}

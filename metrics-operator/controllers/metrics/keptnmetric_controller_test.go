@@ -3,47 +3,34 @@ package metrics
 import (
 	"context"
 	"fmt"
-	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
-	"k8s.io/client-go/kubernetes/scheme"
+	fake2 "github.com/keptn/lifecycle-toolkit/metrics-operator/controllers/common/fake"
 	"reflect"
-	"sigs.k8s.io/controller-runtime/pkg/client"
 	"testing"
 	"time"
 
 	"github.com/go-logr/logr/testr"
-	metricsv1alpha1 "github.com/keptn/lifecycle-toolkit/metrics-operator/apis/metrics/v1alpha1"
+	metrics "github.com/keptn/lifecycle-toolkit/metrics-operator/apis/metrics/v1alpha2"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/types"
 	controllerruntime "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
-// NewClient returns a new controller-runtime fake Client configured with the Operator's scheme, and initialized with objs.
-func NewClient(objs ...client.Object) client.Client {
-	setupSchemes()
-	return fake.NewClientBuilder().WithScheme(scheme.Scheme).WithObjects(objs...).Build()
-}
-
-func setupSchemes() {
-	utilruntime.Must(metricsv1alpha1.AddToScheme(scheme.Scheme))
-}
-
 func TestKeptnMetricReconciler_fetchProvider(t *testing.T) {
-	provider := metricsv1alpha1.KeptnMetricProvider{
+	provider := metrics.KeptnMetricProvider{
 		TypeMeta: metav1.TypeMeta{
-			Kind:       "KeptnEvaluationProvider",
-			APIVersion: "lifecycle.keptn.sh/v1alpha2"},
+			Kind:       "KeptnMetricProvider",
+			APIVersion: "metrics.keptn.sh/v1alpha2"},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "myprovider",
 			Namespace: "default",
 		},
-		Spec:   metricsv1alpha1.KeptnMetricProviderSpec{},
-		Status: metricsv1alpha1.KeptnMetricProviderStatus{},
+		Spec:   metrics.KeptnMetricProviderSpec{},
+		Status: metrics.KeptnMetricProviderStatus{},
 	}
 
-	client := NewClient(&provider)
+	client := fake2.NewClient(&provider)
 	r := &KeptnMetricReconciler{
 		Client: client,
 		Scheme: client.Scheme(),
@@ -67,95 +54,95 @@ func TestKeptnMetricReconciler_fetchProvider(t *testing.T) {
 
 func TestKeptnMetricReconciler_Reconcile(t *testing.T) {
 
-	metric := &metricsv1alpha1.KeptnMetric{
+	metric := &metrics.KeptnMetric{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "mymetric",
 			Namespace: "default",
 		},
-		Spec: metricsv1alpha1.KeptnMetricSpec{
-			Provider:             metricsv1alpha1.ProviderRef{},
+		Spec: metrics.KeptnMetricSpec{
+			Provider:             metrics.ProviderRef{},
 			Query:                "",
 			FetchIntervalSeconds: 1,
 		},
-		Status: metricsv1alpha1.KeptnMetricStatus{
+		Status: metrics.KeptnMetricStatus{
 			Value:       "12",
 			RawValue:    nil,
 			LastUpdated: metav1.Time{Time: time.Now().Add(-1 * time.Minute)},
 		},
 	}
-	metric2 := &metricsv1alpha1.KeptnMetric{
+	metric2 := &metrics.KeptnMetric{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "mymetric2",
 			Namespace: "default",
 		},
-		Spec: metricsv1alpha1.KeptnMetricSpec{
-			Provider:             metricsv1alpha1.ProviderRef{},
+		Spec: metrics.KeptnMetricSpec{
+			Provider:             metrics.ProviderRef{},
 			Query:                "",
 			FetchIntervalSeconds: 1,
 		},
-		Status: metricsv1alpha1.KeptnMetricStatus{
+		Status: metrics.KeptnMetricStatus{
 			Value:       "12",
 			RawValue:    nil,
 			LastUpdated: metav1.Time{Time: time.Now().Add(-1 * time.Minute)},
 		},
 	}
 
-	metric3 := &metricsv1alpha1.KeptnMetric{
+	metric3 := &metrics.KeptnMetric{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "mymetric3",
 			Namespace: "default",
 		},
-		Spec: metricsv1alpha1.KeptnMetricSpec{
-			Provider: metricsv1alpha1.ProviderRef{
+		Spec: metrics.KeptnMetricSpec{
+			Provider: metrics.ProviderRef{
 				Name: "myprov",
 			},
 			Query:                "",
 			FetchIntervalSeconds: 10,
 		},
-		Status: metricsv1alpha1.KeptnMetricStatus{
+		Status: metrics.KeptnMetricStatus{
 			Value:       "12",
 			RawValue:    nil,
 			LastUpdated: metav1.Time{Time: time.Now().Add(-1 * time.Minute)},
 		},
 	}
 
-	metric4 := &metricsv1alpha1.KeptnMetric{
+	metric4 := &metrics.KeptnMetric{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "mymetric4",
 			Namespace: "default",
 		},
-		Spec: metricsv1alpha1.KeptnMetricSpec{
-			Provider: metricsv1alpha1.ProviderRef{
+		Spec: metrics.KeptnMetricSpec{
+			Provider: metrics.ProviderRef{
 				Name: "prometheus",
 			},
 			Query:                "",
 			FetchIntervalSeconds: 10,
 		},
-		Status: metricsv1alpha1.KeptnMetricStatus{
+		Status: metrics.KeptnMetricStatus{
 			Value:       "12",
 			RawValue:    nil,
 			LastUpdated: metav1.Time{Time: time.Now().Add(-1 * time.Minute)},
 		},
 	}
 
-	provider := &metricsv1alpha1.KeptnMetricProvider{
+	provider := &metrics.KeptnMetricProvider{
 		ObjectMeta: metav1.ObjectMeta{Name: "myprov", Namespace: "default"},
-		Spec:       metricsv1alpha1.KeptnMetricProviderSpec{},
-		Status:     metricsv1alpha1.KeptnMetricProviderStatus{},
+		Spec:       metrics.KeptnMetricProviderSpec{},
+		Status:     metrics.KeptnMetricProviderStatus{},
 	}
 
-	supportedprov := &metricsv1alpha1.KeptnMetricProvider{
+	supportedprov := &metrics.KeptnMetricProvider{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "prometheus",
 			Namespace: "default",
 		},
-		Spec: metricsv1alpha1.KeptnMetricProviderSpec{
+		Spec: metrics.KeptnMetricProviderSpec{
 			TargetServer: "http://keptn.sh",
 		},
-		Status: metricsv1alpha1.KeptnMetricProviderStatus{},
+		Status: metrics.KeptnMetricProviderStatus{},
 	}
 
-	client := NewClient(metric, metric2, metric3, metric4, provider, supportedprov)
+	client := fake2.NewClient(metric, metric2, metric3, metric4, provider, supportedprov)
 
 	r := &KeptnMetricReconciler{
 		Client: client,

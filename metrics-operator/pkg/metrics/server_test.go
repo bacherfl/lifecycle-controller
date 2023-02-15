@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	metricsv1alpha1 "github.com/keptn/lifecycle-toolkit/metrics-operator/apis/metrics/v1alpha1"
+	metricsv1alpha1 "github.com/keptn/lifecycle-toolkit/metrics-operator/apis/metrics/v1alpha2"
 	"github.com/open-feature/go-sdk/pkg/openfeature"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"

@@ -18,18 +18,6 @@ import (
 const kltNamespace = "my-namespace"
 
 func TestProvider(t *testing.T) {
-
-	mapp := map[string]provider2.CustomMetricInfo{
-		"foo": provider2.CustomMetricInfo{Metric: "foo"},
-		"bar": provider2.CustomMetricInfo{Metric: "bar"},
-	}
-
-	for k, m := range mapp {
-		if k == "bar" {
-			m.Metric = "hello"
-		}
-	}
-
 	metricObj1 := getSampleKeptnMetric("my-metric", map[string]interface{}{})
 
 	km := &unstructured.Unstructured{}
@@ -136,7 +124,7 @@ func TestProvider(t *testing.T) {
 
 func getSampleKeptnMetric(metricName string, labels map[string]interface{}) map[string]interface{} {
 	return map[string]interface{}{
-		"apiVersion": "metrics.keptn.sh/v1alpha1",
+		"apiVersion": "metrics.keptn.sh/v1alpha2",
 		"kind":       "KeptnMetric",
 		"metadata": map[string]interface{}{
 			"name":      metricName,

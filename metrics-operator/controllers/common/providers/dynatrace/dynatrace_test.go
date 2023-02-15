@@ -3,13 +3,13 @@ package dynatrace
 import (
 	"context"
 	"fmt"
+	metrics "github.com/keptn/lifecycle-toolkit/metrics-operator/apis/metrics/v1alpha2"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
-	klcv1alpha2 "github.com/keptn/lifecycle-toolkit/operator/apis/lifecycle/v1alpha2"
-	"github.com/keptn/lifecycle-toolkit/operator/controllers/common/fake"
+	"github.com/keptn/lifecycle-toolkit/metrics-operator/controllers/common/fake"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -120,11 +120,11 @@ func TestEvaluateQuery_CorrectHTTP(t *testing.T) {
 		Log:        ctrl.Log.WithName("testytest"),
 		K8sClient:  fakeClient,
 	}
-	obj := klcv1alpha2.Objective{
-		Query: query,
+	obj := metrics.KeptnMetric{
+		Spec: metrics.KeptnMetricSpec{Query: query},
 	}
-	p := klcv1alpha2.KeptnEvaluationProvider{
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{
+	p := metrics.KeptnMetricProvider{
+		Spec: metrics.KeptnMetricProviderSpec{
 			SecretKeyRef: v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
 					Name: "myapitoken",
@@ -164,11 +164,11 @@ func TestEvaluateQuery_WrongPayloadHandling(t *testing.T) {
 		Log:        ctrl.Log.WithName("testytest"),
 		K8sClient:  fakeClient,
 	}
-	obj := klcv1alpha2.Objective{
-		Query: "myquery",
+	obj := metrics.KeptnMetric{
+		Spec: metrics.KeptnMetricSpec{Query: "myquery"},
 	}
-	p := klcv1alpha2.KeptnEvaluationProvider{
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{
+	p := metrics.KeptnMetricProvider{
+		Spec: metrics.KeptnMetricProviderSpec{
 			SecretKeyRef: v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
 					Name: secretName,
@@ -197,11 +197,11 @@ func TestEvaluateQuery_MissingSecret(t *testing.T) {
 		Log:        ctrl.Log.WithName("testytest"),
 		K8sClient:  fakeClient,
 	}
-	obj := klcv1alpha2.Objective{
-		Query: "myquery",
+	obj := metrics.KeptnMetric{
+		Spec: metrics.KeptnMetricSpec{Query: "myquery"},
 	}
-	p := klcv1alpha2.KeptnEvaluationProvider{
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{
+	p := metrics.KeptnMetricProvider{
+		Spec: metrics.KeptnMetricProviderSpec{
 			TargetServer: svr.URL,
 		},
 	}
@@ -223,11 +223,11 @@ func TestEvaluateQuery_SecretNotFound(t *testing.T) {
 		Log:        ctrl.Log.WithName("testytest"),
 		K8sClient:  fakeClient,
 	}
-	obj := klcv1alpha2.Objective{
-		Query: "myquery",
+	obj := metrics.KeptnMetric{
+		Spec: metrics.KeptnMetricSpec{Query: "myquery"},
 	}
-	p := klcv1alpha2.KeptnEvaluationProvider{
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{
+	p := metrics.KeptnMetricProvider{
+		Spec: metrics.KeptnMetricProviderSpec{
 			SecretKeyRef: v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
 					Name: "myapitoken",
@@ -265,12 +265,12 @@ func TestEvaluateQuery_RefNotExistingKey(t *testing.T) {
 		Log:        ctrl.Log.WithName("testytest"),
 		K8sClient:  fakeClient,
 	}
-	obj := klcv1alpha2.Objective{
-		Query: "myquery",
+	obj := metrics.KeptnMetric{
+		Spec: metrics.KeptnMetricSpec{Query: "myquery"},
 	}
 	missingKey := "key_not_found"
-	p := klcv1alpha2.KeptnEvaluationProvider{
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{
+	p := metrics.KeptnMetricProvider{
+		Spec: metrics.KeptnMetricProviderSpec{
 			SecretKeyRef: v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
 					Name: secretName,
@@ -309,11 +309,11 @@ func TestEvaluateQuery_HappyPath(t *testing.T) {
 		Log:        ctrl.Log.WithName("testytest"),
 		K8sClient:  fakeClient,
 	}
-	obj := klcv1alpha2.Objective{
-		Query: "myquery",
+	obj := metrics.KeptnMetric{
+		Spec: metrics.KeptnMetricSpec{Query: "myquery"},
 	}
-	p := klcv1alpha2.KeptnEvaluationProvider{
-		Spec: klcv1alpha2.KeptnEvaluationProviderSpec{
+	p := metrics.KeptnMetricProvider{
+		Spec: metrics.KeptnMetricProviderSpec{
 			SecretKeyRef: v1.SecretKeySelector{
 				LocalObjectReference: v1.LocalObjectReference{
 					Name: secretName,

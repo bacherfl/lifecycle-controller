@@ -8,18 +8,18 @@ import (
 	"sync"
 )
 
-// DTAPIClientMock is a mock implementation of dynatrace.DTAPIClient.
+// DTAPIClientMock is a mock implementation of client.DTAPIClient.
 //
 //	func TestSomethingThatUsesDTAPIClient(t *testing.T) {
 //
-//		// make and configure a mocked dynatrace.DTAPIClient
+//		// make and configure a mocked client.DTAPIClient
 //		mockedDTAPIClient := &DTAPIClientMock{
 //			DoFunc: func(ctx context.Context, path string, method string, payload []byte) ([]byte, error) {
 //				panic("mock out the Do method")
 //			},
 //		}
 //
-//		// use mockedDTAPIClient in code that requires dynatrace.DTAPIClient
+//		// use mockedDTAPIClient in code that requires client.DTAPIClient
 //		// and then make assertions.
 //
 //	}

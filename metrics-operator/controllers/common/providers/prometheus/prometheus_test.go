@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	klcv1alpha2 "github.com/keptn/lifecycle-toolkit/operator/apis/lifecycle/v1alpha2"
+	metrics "github.com/keptn/lifecycle-toolkit/metrics-operator/apis/metrics/v1alpha2"
 	"github.com/stretchr/testify/require"
 	v1 "k8s.io/api/core/v1"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -78,11 +78,14 @@ func Test_prometheus(t *testing.T) {
 				HttpClient: http.Client{},
 				Log:        ctrl.Log.WithName("testytest"),
 			}
-			obj := klcv1alpha2.Objective{
-				Query: "garbage",
+
+			metric := metrics.KeptnMetric{
+				Spec: metrics.KeptnMetricSpec{
+					Query: "my-query",
+				},
 			}
-			p := klcv1alpha2.KeptnEvaluationProvider{
-				Spec: klcv1alpha2.KeptnEvaluationProviderSpec{
+			p := metrics.KeptnMetricProvider{
+				Spec: metrics.KeptnMetricProviderSpec{
 					SecretKeyRef: v1.SecretKeySelector{
 						LocalObjectReference: v1.LocalObjectReference{
 							Name: "myapitoken",
@@ -92,7 +95,7 @@ func Test_prometheus(t *testing.T) {
 					TargetServer: svr.URL,
 				},
 			}
-			r, raw, e := kpp.GetMetricValue(context.TODO(), obj, p)
+			r, raw, e := kpp.GetMetricValue(context.TODO(), metric, p)
 			require.Equal(t, tt.out, r)
 			require.Equal(t, tt.outraw, raw)
 			if tt.wantError != (e != nil) {
