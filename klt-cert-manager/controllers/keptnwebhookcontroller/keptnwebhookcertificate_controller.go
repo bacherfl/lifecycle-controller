@@ -20,6 +20,12 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 )
 
+type WebhookCertificateReconcilerOptions struct {
+	DisableMutatingWebhookConfigurations   bool
+	DisableValidatingWebhookConfigurations bool
+	DisableCRDs                            bool
+}
+
 // KeptnWebhookCertificateReconciler reconciles a KeptnWebhookCertificate object
 type KeptnWebhookCertificateReconciler struct {
 	Client        client.Client
@@ -28,6 +34,7 @@ type KeptnWebhookCertificateReconciler struct {
 	Log           logr.Logger
 	Namespace     string
 	MatchLabels   labels.Set
+	Options       WebhookCertificateReconcilerOptions
 }
 
 //clusterrole
@@ -156,6 +163,9 @@ func (r *KeptnWebhookCertificateReconciler) cancelMgr() {
 
 func (r *KeptnWebhookCertificateReconciler) getMutatingWebhookConfigurations(ctx context.Context) (
 	*admissionregistrationv1.MutatingWebhookConfigurationList, error) {
+	if r.Options.DisableMutatingWebhookConfigurations {
+		return nil, nil
+	}
 	var mutatingWebhooks admissionregistrationv1.MutatingWebhookConfigurationList
 
 	if err := r.Client.List(ctx, &mutatingWebhooks, client.MatchingLabels(r.MatchLabels)); err != nil {
@@ -166,6 +176,10 @@ func (r *KeptnWebhookCertificateReconciler) getMutatingWebhookConfigurations(ctx
 
 func (r *KeptnWebhookCertificateReconciler) getValidatingWebhookConfigurations(ctx context.Context) (
 	*admissionregistrationv1.ValidatingWebhookConfigurationList, error) {
+
+	if r.Options.DisableValidatingWebhookConfigurations {
+		return nil, nil
+	}
 	var validatingWebhooks admissionregistrationv1.ValidatingWebhookConfigurationList
 
 	if err := r.Client.List(ctx, &validatingWebhooks, client.MatchingLabels(r.MatchLabels)); err != nil {
@@ -192,6 +206,9 @@ func (r *KeptnWebhookCertificateReconciler) updateClientConfigurations(ctx conte
 
 func (r *KeptnWebhookCertificateReconciler) getCRDConfigurations(ctx context.Context) (
 	*apiv1.CustomResourceDefinitionList, error) {
+	if r.Options.DisableCRDs {
+		return nil, nil
+	}
 	var crds apiv1.CustomResourceDefinitionList
 	opt := client.MatchingLabels(r.MatchLabels)
 	if err := r.Client.List(ctx, &crds, opt); err != nil {
