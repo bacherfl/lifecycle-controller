@@ -164,7 +164,7 @@ func (r *KeptnWebhookCertificateReconciler) cancelMgr() {
 func (r *KeptnWebhookCertificateReconciler) getMutatingWebhookConfigurations(ctx context.Context) (
 	*admissionregistrationv1.MutatingWebhookConfigurationList, error) {
 	if r.Options.DisableMutatingWebhookConfigurations {
-		return nil, nil
+		return &admissionregistrationv1.MutatingWebhookConfigurationList{}, nil
 	}
 	var mutatingWebhooks admissionregistrationv1.MutatingWebhookConfigurationList
 
@@ -178,7 +178,7 @@ func (r *KeptnWebhookCertificateReconciler) getValidatingWebhookConfigurations(c
 	*admissionregistrationv1.ValidatingWebhookConfigurationList, error) {
 
 	if r.Options.DisableValidatingWebhookConfigurations {
-		return nil, nil
+		return &admissionregistrationv1.ValidatingWebhookConfigurationList{}, nil
 	}
 	var validatingWebhooks admissionregistrationv1.ValidatingWebhookConfigurationList
 
@@ -207,7 +207,7 @@ func (r *KeptnWebhookCertificateReconciler) updateClientConfigurations(ctx conte
 func (r *KeptnWebhookCertificateReconciler) getCRDConfigurations(ctx context.Context) (
 	*apiv1.CustomResourceDefinitionList, error) {
 	if r.Options.DisableCRDs {
-		return nil, nil
+		return &apiv1.CustomResourceDefinitionList{}, nil
 	}
 	var crds apiv1.CustomResourceDefinitionList
 	opt := client.MatchingLabels(r.MatchLabels)
