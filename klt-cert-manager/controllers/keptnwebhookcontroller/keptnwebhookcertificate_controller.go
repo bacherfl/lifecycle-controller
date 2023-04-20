@@ -64,9 +64,12 @@ func (r *KeptnWebhookCertificateReconciler) Reconcile(ctx context.Context, reque
 		r.Log.Error(err, "could not find validating webhook configuration")
 	}
 
+	r.Log.Info("Looking for matching CRDs for labels", "labels", r.MatchLabels)
 	crds, err := r.getCRDConfigurations(ctx)
 	if err != nil {
 		r.Log.Error(err, "could not find CRDs")
+	} else {
+		r.Log.Info("Found matching CRDs: ", "len", len(crds.Items), "items", crds.Items)
 	}
 
 	certSecret := newCertificateSecret(r.Client)
