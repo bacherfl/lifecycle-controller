@@ -30,6 +30,7 @@ type AnalysisDefinitionSpec struct {
 }
 
 // TotalScore defines the required score for an analysis to be successful
+// +kubebuilder:validation:XValidation:rule=(self.passPercentage > self.warningPercentage)
 type TotalScore struct {
 	// PassPercentage defines the threshold to reach for an analysis to pass
 	// +kubebuilder:validation:Minimum:=0

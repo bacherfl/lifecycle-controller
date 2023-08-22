@@ -242,6 +242,8 @@ spec:
                       the data query
                     type: string
                 type: object
+                x-kubernetes-validations:
+                - rule: (!has(self.step) || (has(self.step) && has(self.aggregation)))
             required:
             - fetchIntervalSeconds
             - provider

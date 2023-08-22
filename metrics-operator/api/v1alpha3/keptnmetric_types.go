@@ -54,6 +54,7 @@ type ProviderRef struct {
 }
 
 // RangeSpec defines the time range for which data is to be queried
+// +kubebuilder:validation:XValidation:rule=(!has(self.step) || (has(self.step) && has(self.aggregation)))
 type RangeSpec struct {
 	// Interval specifies the duration of the time interval for the data query
 	// +kubebuilder:default:="5m"

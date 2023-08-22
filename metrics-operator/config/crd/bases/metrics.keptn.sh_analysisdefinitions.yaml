@@ -233,6 +233,8 @@ spec:
                 - passPercentage
                 - warningPercentage
                 type: object
+                x-kubernetes-validations:
+                - rule: (self.passPercentage > self.warningPercentage)
             required:
             - totalScore
             type: object

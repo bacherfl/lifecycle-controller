@@ -17,5 +17,5 @@ spec:
       weight: 1
       keyObjective: false
   totalScore:
-    passPercentage: 90
+    passPercentage: 20
     warningPercentage: 75
