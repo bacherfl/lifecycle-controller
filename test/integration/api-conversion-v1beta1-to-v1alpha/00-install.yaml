@@ -4,6 +4,7 @@ metadata:
   name: "some-keptn-app2"
 spec:
   version: "1.2.3"
+  revision: 123
 ---
 apiVersion: lifecycle.keptn.sh/v1beta1
 kind: KeptnAppVersion
@@ -19,29 +20,10 @@ spec:
     traceparent: my-trace-parent
   version: 0.1.0
   workloads:
-    - name: podtato-head-left-arm
+    - name: some-keptn-app2
       version: 0.2.7
 ---
-apiVersion: lifecycle.keptn.sh/v1alpha4
-kind: KeptnWorkloadVersion
-metadata:
-  name: podtato-head-podtato-head-entry-0.1.0
-spec:
-  app: "some-keptn-app2"
-  version: 0.2.7
-  preDeploymentTasks:
-    - pre-deployment-task
-  postDeploymentTasks:
-    - post-deployment-task
-  workloadName: some-keptn-app2
-  traceId:
-    traceparent: my-trace-parent
-  resourceReference:
-    kind: ReplicaSet
-    name: my-replica-set
-    uid: 957f825e-4025-4ea8-ad22-9292877ff7eb
----
-apiVersion: lifecycle.keptn.sh/v1alpha3
+apiVersion: lifecycle.keptn.sh/v1beta1
 kind: KeptnWorkload
 metadata:
   name: some-keptn-app2
@@ -53,11 +35,11 @@ spec:
   postDeploymentTasks:
     - post-deployment-task
   resourceReference:
-  kind: ReplicaSet
-  name: my-replica-set
-  uid: 957f825e-4025-4ea8-ad22-9292877ff7eb
+    kind: ReplicaSet
+    name: my-replica-set
+    uid: 957f825e-4025-4ea8-ad22-9292877ff7eb
 ---
-apiVersion: lifecycle.keptn.sh/v1alpha3
+apiVersion: lifecycle.keptn.sh/v1beta1
 kind: KeptnTaskDefinition
 metadata:
   name: some-keptn-app-version-2-task
@@ -67,7 +49,7 @@ spec:
       code: |
         console.log("Okay")
 ---
-apiVersion: lifecycle.keptn.sh/v1alpha3
+apiVersion: lifecycle.keptn.sh/v1beta1
 kind: KeptnTask
 metadata:
   name: some-keptn-app-version-2
@@ -81,7 +63,7 @@ spec:
     workloadName: "some-keptn-app2"
     workloadVersion: "0.2.7"
 ---
-apiVersion: lifecycle.keptn.sh/v1alpha3
+apiVersion: lifecycle.keptn.sh/v1beta1
 kind: KeptnEvaluationDefinition
 metadata:
   name: some-keptn-app-version-2
@@ -89,9 +71,9 @@ spec:
   objectives:
     - evaluationTarget: ">1000"
       keptnMetricRef:
-        name: cpu-s
+        name: available-cpus
 ---
-apiVersion: lifecycle.keptn.sh/v1alpha3
+apiVersion: lifecycle.keptn.sh/v1beta1
 kind: KeptnEvaluation
 metadata:
   name: some-keptn-app-version-2
